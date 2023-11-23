@@ -18,7 +18,14 @@ export const post: QueryResolvers['post'] = ({ id }) => {
 
 export const createPost: MutationResolvers['createPost'] = ({ input }) => {
   return db.post.create({
-    data: input,
+    data: {
+      ...input,
+      postLikes: {
+        create: {
+          likeCount: 10,
+        },
+      },
+    },
   })
 }
 
@@ -38,5 +45,14 @@ export const deletePost: MutationResolvers['deletePost'] = ({ id }) => {
 export const Post: PostRelationResolvers = {
   User: (_obj, { root }) => {
     return db.post.findUnique({ where: { id: root?.id } }).User()
+  },
+  category: (_obj, { root }) => {
+    return db.post.findUnique({ where: { id: root?.id } }).category()
+  },
+  comment: (_obj, { root }) => {
+    return db.post.findUnique({ where: { id: root?.id } }).comment()
+  },
+  postLikes: (_obj, { root }) => {
+    return db.post.findUnique({ where: { id: root?.id } }).postLikes()
   },
 }

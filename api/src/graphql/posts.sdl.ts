@@ -5,6 +5,9 @@ export const schema = gql`
     content: String
     User: User
     userId: Int
+    category: [Category]
+    comment: [Comment]
+    postLikes: [PostLike]
   }
 
   type Query {
@@ -16,6 +19,7 @@ export const schema = gql`
     title: String!
     content: String
     userId: Int
+    postLikes: [CreatePostLikeInput!]
   }
 
   input UpdatePostInput {

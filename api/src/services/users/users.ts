@@ -24,8 +24,54 @@ export const createUser: MutationResolvers['createUser'] = ({ input }) => {
 
 export const updateUser: MutationResolvers['updateUser'] = ({ id, input }) => {
   return db.user.update({
-    data: input,
+    data: {
+      ...input,
+      posts: {
+        update: {
+          where: { id: 11 },
+          data: {
+            title: 'Updated Post 1',
+            content: 'Updated Post 1',
+            postLikes: {
+              update: {
+                where: { id: 2 },
+                data: { likeCount: 55 },
+              },
+            },
+          },
+        },
+      },
+    },
     where: { id },
+  })
+}
+
+export const createNestedUser: MutationResolvers['createNestedUser'] = ({
+  input,
+}) => {
+  return db.user.create({
+    data: {
+      ...input,
+      name: 'Ahmet',
+      posts: {
+        create: [
+          {
+            title: 'Post 1',
+            content: 'This is post 1',
+            comment: {
+              connectOrCreate: {
+                create: {
+                  content: 'This is comment 1',
+                },
+                where: {
+                  id: 1,
+                },
+              },
+            },
+          },
+        ],
+      },
+    },
   })
 }
 

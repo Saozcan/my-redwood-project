@@ -14,7 +14,6 @@ export const schema = gql`
   input CreateUserInput {
     name: String!
     email: String
-    posts: [CreatePostInput]
   }
 
   input UpdateUserInput {
@@ -22,9 +21,17 @@ export const schema = gql`
     email: String
   }
 
+  input CreateUserInputNested {
+    name: String!
+    email: String
+    posts: [CreatePostInput!]
+    comments: [CreateCommentInput!]
+  }
+
   type Mutation {
     createUser(input: CreateUserInput!): User! @requireAuth
     updateUser(id: Int!, input: UpdateUserInput!): User! @requireAuth
     deleteUser(id: Int!): User! @requireAuth
+    createNestedUser(input: CreateUserInputNested!): User! @requireAuth
   }
 `
