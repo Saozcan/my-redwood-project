@@ -248,13 +248,13 @@ export function updateNestedData<T>({
   clearEmptyFields(updateData)
   clearEmptyFields(deleteData)
 
-  const merged = deepMergeObjectsForDelete(
-    _.cloneDeep(incomingData),
-    _.cloneDeep(deleteData)
-  )
+  // const merged = deepMergeObjectsForDelete(
+  //   _.cloneDeep(incomingData),
+  //   _.cloneDeep(deleteData)
+  // )
 
   return setUpdatePrismaStruct({
-    incomingData: merged,
+    incomingData,
     updateData,
     createData,
     deleteData,
@@ -263,7 +263,7 @@ export function updateNestedData<T>({
 
 // updateNestedData({ incomingData, currentData })
 
-function clearEmptyFields(data) {
+export function clearEmptyFields(data) {
   if (_.isArray(data)) {
     // Iterate backwards through the array to avoid issues with splicing
     for (let i = data.length - 1; i >= 0; i--) {
@@ -294,28 +294,63 @@ function clearEmptyFields(data) {
   return false
 }
 
-function deepMergeObjectsForDelete(obj1, obj2) {
-  // Create a new object to store the merged results
-  let merged = {}
+// export function deepMergeObjectsForDelete(obj1, obj2) {
+//   function mergeIdRecursive(target, source) {
+//     if (_.isArray(target) && _.isArray(source)) {
+//       // Iterate over each element in the array
+//       target.forEach((item, index) => {
+//         if (source[index]) {
+//           mergeIdRecursive(item, source[index])
+//         }
+//       })
+//     } else if (_.isObject(target) && _.isObject(source)) {
+//       // Iterate over each key in the object
+//       _.forEach(source, (value, key) => {
+//         if (key === 'id') {
+//           target[key] = value // Merge 'id' key
+//         } else if (_.isObject(value) && _.isObject(target[key])) {
+//           mergeIdRecursive(target[key], value) // Recurse for nested objects
+//         }
+//       })
+//     }
+//   }
 
-  // Function to merge two objects
-  function mergeRecursive(target, source) {
-    _.forEach(source, (value, key) => {
-      if (_.isObject(value) && _.isObject(target[key])) {
-        // If both values are objects, recurse
-        target[key] = mergeRecursive(target[key], value)
-      } else {
-        // Otherwise, directly assign the value from source to target
-        target[key] = value
-      }
-    })
-    return target
-  }
+//   // Create a deep copy of the first object to avoid mutating it
+//   const mergedObj = _.cloneDeep(obj1)
 
-  // Merge obj1 into the merged object
-  merged = mergeRecursive(merged, obj1)
-  // Merge obj2 into the merged object
-  merged = mergeRecursive(merged, obj2)
+//   // Start the recursive merging process
+//   mergeIdRecursive(mergedObj, obj2)
 
-  return merged
-}
+//   return mergedObj
+// }
+
+// export function deepMergedForDelete(obj1: object, obj2: object) {
+//   if (_.isEqual(obj1, obj2)) return obj1
+//   if (_.isEmpty(obj2) || !obj2) return obj1
+
+//   function mergeRecursive(source, target) {
+//     if (_.isObject(target)) {
+//       if (!_.isObject(source)) {
+//         Object.assign(source, target)
+//       }
+//       for (const key in target) {
+//         if (_.isObject(target[key]) || _.isArray(target[key])) {
+//           source[key] = mergeRecursive(source[key], target[key])
+//         } else if (key === 'id' && !source[key]) {
+//           source[key] = target[key]
+//         }
+//       }
+//     } else if (_.isArray(target)) {
+//       if (!source) source = target
+//     } else {
+//       source.forEach((i) =>
+//         mergeRecursive(
+//           source.find((j) => (i.id = j.id)),
+//           i
+//         )
+//       )
+//     }
+//   }
+
+//   return mergeRecursive(_.cloneDeep(obj1), obj2)
+// }

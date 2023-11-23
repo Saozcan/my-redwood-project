@@ -30,20 +30,54 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
 }) => {
   const current = await db.user.findUnique({
     where: { id },
-    include: { posts: { include: { postLikes: true } } },
+    include: { posts: { include: { postLikes: true, comment: true } } },
   })
   const generatePrisma = updateNestedData({
     incomingData: { ...input, id },
     currentData: { ...current, id },
   })
+  console.dir(generatePrisma, { depth: 15 })
 
   return db.user.update(generatePrisma)
+  // return db.user.update({
+  //   data: {
+  //     posts: {
+  //       update: [
+  //         {
+  //           data: {
+  //             comment: { create: [{ id: 333, content: '555' }] },
+  //           },
+  //           where: { id: 16 },
+  //         },
+  //       ],
+  //     },
+  //     id: 4,
+  //   },
+  //   where: { id: 4 },
+  // })
 }
 
 export const createNestedUser: MutationResolvers['createNestedUser'] = ({
   input,
 }) => {
-  return db.user.create(input)
+  return db.user.create({
+    data: {
+      name: 'ahmet',
+      email: 'mehmet',
+      posts: [
+        {
+          context: 'context',
+          title: 'title',
+          comment: [
+            {
+              id: 123,
+              content: 'test',
+            },
+          ],
+        },
+      ],
+    },
+  })
 }
 
 export const deleteUser: MutationResolvers['deleteUser'] = ({ id }) => {

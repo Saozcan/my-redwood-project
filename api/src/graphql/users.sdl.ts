@@ -26,7 +26,6 @@ export const schema = gql`
     name: String!
     email: String
     posts: [CreatePostInput!]
-    comments: [CreateCommentInput!]
   }
 
   type Mutation {

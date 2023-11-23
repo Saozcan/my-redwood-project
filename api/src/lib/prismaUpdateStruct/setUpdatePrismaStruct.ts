@@ -1,8 +1,8 @@
 import * as _ from 'lodash'
 
 const prismaStruct = {
-  updateMany: [],
-  create: [],
+  update: [],
+  upsert: [],
   delete: [],
 }
 
@@ -57,7 +57,7 @@ export function setUpdatePrismaStructRecursion({
 
   if (_.isArray(incomingData)) {
     if (updateData) {
-      updatePrismaStruct.updateMany = updateData.map((item) => ({
+      updatePrismaStruct.update = updateData.map((item) => ({
         data: partOfUpdatePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
           updateData: updateData.find((j) => j.id === item.id) ?? null,
@@ -66,11 +66,16 @@ export function setUpdatePrismaStructRecursion({
       }))
     }
     if (createData) {
-      updatePrismaStruct.create = createData.map((item) => ({
-        ...partOfCreatePrismaStruct({
+      updatePrismaStruct.upsert = createData.map((item) => ({
+        create: partOfCreatePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
           createData: { ...createData.find((j) => j.id === item.id) } ?? null,
         }),
+        update: partOfCreatePrismaStruct({
+          incomingData: incomingData.find((j) => j.id === item.id),
+          createData: { ...createData.find((j) => j.id === item.id) } ?? null,
+        }),
+        where: { id: item.id },
       }))
     }
     if (deleteData) {

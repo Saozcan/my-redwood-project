@@ -26,7 +26,7 @@ export const schema = gql`
     id: Int
     title: String
     content: String
-    userId: Int
+    comment: [UpdateCommentInput]
   }
 
   type Mutation {

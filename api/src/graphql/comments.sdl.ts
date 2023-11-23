@@ -17,8 +17,10 @@ export const schema = gql`
   }
 
   input UpdateCommentInput {
+    id: Int
     content: String
-    postId: Int
+    postLikes: [UpdatePostLikeInput]
+    
   }
 
   type Mutation {
