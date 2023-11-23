@@ -19,6 +19,7 @@ export const schema = gql`
   input UpdateUserInput {
     name: String
     email: String
+    posts: [UpdatePostInput]
   }
 
   input CreateUserInputNested {

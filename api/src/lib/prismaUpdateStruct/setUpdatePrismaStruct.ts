@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 const prismaStruct = {
   updateMany: [],
-  createMany: [],
+  create: [],
   delete: [],
 }
 
@@ -66,17 +66,22 @@ export function setUpdatePrismaStructRecursion({
       }))
     }
     if (createData) {
-      updatePrismaStruct.createMany = createData.map((item) => ({
-        data: partOfCreatePrismaStruct({
+      updatePrismaStruct.create = createData.map((item) => ({
+        ...partOfCreatePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
-          createData: createData.find((j) => j.id === item.id) ?? null,
+          createData: { ...createData.find((j) => j.id === item.id) } ?? null,
         }),
       }))
     }
     if (deleteData) {
       updatePrismaStruct.delete = deleteData.map((item) => ({
-        where: { id: item.id },
+        id: item.id,
       }))
+    }
+    for (const key in updatePrismaStruct) {
+      if (_.isEmpty(updatePrismaStruct[key])) {
+        delete updatePrismaStruct[key]
+      }
     }
     return updatePrismaStruct
   }
@@ -120,12 +125,15 @@ export function setUpdatePrismaStruct({
     if (_.isArray(incomingData[key]) || _.isObject(incomingData[key])) {
       updatePrismaStruct[key] = setUpdatePrismaStructRecursion({
         incomingData: incomingData[key],
-        updateData: updateData[key] ?? null,
+        updateData: updateData?.[key] ?? null,
         createData: createData?.[key] ?? null,
         deleteData: deleteData?.[key] ?? null,
       })
+      if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {
+        delete updatePrismaStruct[key]
+      }
     } else {
-      updateData[key] && (updatePrismaStruct[key] = updateData[key])
+      updateData?.[key] && (updatePrismaStruct[key] = updateData[key])
     }
   }
   return { data: updatePrismaStruct, where: { id: incomingData.id } }

@@ -248,139 +248,18 @@ export function updateNestedData<T>({
   clearEmptyFields(updateData)
   clearEmptyFields(deleteData)
 
-  // console.log('create: ', createData)
-  // console.log('update: ', updateData)
-  // console.log('delete: ', deleteData)
-
-  console.dir(
-    setUpdatePrismaStruct({
-      incomingData,
-      updateData,
-      createData,
-      deleteData,
-    }),
-    { depth: 15 }
+  const merged = deepMergeObjectsForDelete(
+    _.cloneDeep(incomingData),
+    _.cloneDeep(deleteData)
   )
-}
 
-const incomingData = {
-  id: 1,
-  name: 'ahmet',
-  surname: 'mehmet',
-  address: {
-    id: 1,
-    city: 'istanbul',
-    country: 'turkey',
-  },
-  object: {
-    id: 1,
-    name: 'asdasd',
-  },
-  phones: [
-    {
-      id: 1,
-      number: '456',
-    },
-    {
-      id: 2,
-      number: '4563123123',
-    },
-    {
-      id: 3,
-      number: '456',
-    },
-  ],
-  array: [
-    {
-      id: 1,
-      name: 'ahmet',
-    },
-    {
-      id: 2,
-      name: 'ahmet',
-    },
-  ],
+  return setUpdatePrismaStruct({
+    incomingData: merged,
+    updateData,
+    createData,
+    deleteData,
+  })
 }
-
-const currentData = {
-  id: 1,
-  surname: 'mehmet',
-  address: {
-    id: 1,
-    city: 'istanbul',
-    country: 'turkey',
-  },
-  phones: [
-    {
-      id: 1,
-      number: '123',
-    },
-    {
-      id: 4,
-      number: '1231231231123',
-    },
-  ],
-  array: [
-    {
-      id: 1,
-      name: 'ahmet',
-    },
-    {
-      id: 2,
-      name: 'mehmet',
-    },
-  ],
-  name: 'ahmetdsasd',
-}
-
-const firstLevelObject = {
-  id: 1,
-  name: 'ahmet',
-  surname: 'mehmet',
-  address: {
-    id: 1,
-    city: 'istanbul',
-    country: 'turkey',
-    phone: {
-      id: 1,
-      number: '123',
-      test: [
-        {
-          id: 1,
-          name: 'ahmet',
-        },
-        {
-          id: 2,
-          name: 'ahmet',
-          bla: {
-            id: 1,
-            name: 'ahmet',
-          },
-        },
-      ],
-    },
-  },
-}
-
-const firstLevelObjectCurr = {
-  id: 1,
-  name: 'ahmet',
-  surname: 'mehmet',
-  address: {
-    id: 1,
-    city: 'istanbul',
-    country: 'turkey',
-    phone: {
-      id: 1,
-      number: '1234',
-    },
-  },
-}
-
-updateNestedData({
-  incomingData: firstLevelObject,
-  currentData: firstLevelObjectCurr,
-})
 
 // updateNestedData({ incomingData, currentData })
 
@@ -413,4 +292,30 @@ function clearEmptyFields(data) {
   }
   // Return false for non-object, non-array data
   return false
+}
+
+function deepMergeObjectsForDelete(obj1, obj2) {
+  // Create a new object to store the merged results
+  let merged = {}
+
+  // Function to merge two objects
+  function mergeRecursive(target, source) {
+    _.forEach(source, (value, key) => {
+      if (_.isObject(value) && _.isObject(target[key])) {
+        // If both values are objects, recurse
+        target[key] = mergeRecursive(target[key], value)
+      } else {
+        // Otherwise, directly assign the value from source to target
+        target[key] = value
+      }
+    })
+    return target
+  }
+
+  // Merge obj1 into the merged object
+  merged = mergeRecursive(merged, obj1)
+  // Merge obj2 into the merged object
+  merged = mergeRecursive(merged, obj2)
+
+  return merged
 }

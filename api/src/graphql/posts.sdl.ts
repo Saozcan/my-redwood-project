@@ -23,6 +23,7 @@ export const schema = gql`
   }
 
   input UpdatePostInput {
+    id: Int
     title: String
     content: String
     userId: Int
