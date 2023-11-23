@@ -13,14 +13,14 @@ function partOfUpdatePrismaStruct({
   deleteData,
 }) {
   const prismaStructObject = {} as any
-  if (_.isObject(incomingData)) {
-    for (const key in incomingData) {
-      if (_.isArray(incomingData[key]) || _.isObject(incomingData[key])) {
+  if (_.isObject(updateData)) {
+    for (const key in updateData) {
+      if (_.isArray(updateData[key]) || _.isObject(updateData[key])) {
         prismaStructObject[key] = setUpdatePrismaStructRecursion({
           incomingData: incomingData[key],
           updateData: updateData?.[key] ?? null,
-          createData: createData?.[key] ?? null,
-          deleteData: deleteData?.[key] ?? null,
+          createData: null,
+          deleteData: null,
         })
       }
       prismaStructObject[key] = prismaStructObject[key] ?? updateData[key]
@@ -37,19 +37,14 @@ function partOfCreatePrismaStruct({
   deleteData,
 }) {
   const prismaStructObject = {} as any
-  if (_.isObject(incomingData)) {
-    console.log('incomingData: ', incomingData)
-    console.log('updateData: ', updateData)
-    console.log('createData: ', createData)
-    console.log('deleteData: ', deleteData)
-
-    for (const key in incomingData) {
-      if (_.isArray(incomingData[key]) || _.isObject(incomingData[key])) {
+  if (_.isObject(createData)) {
+    for (const key in createData) {
+      if (_.isArray(createData[key]) || _.isObject(createData[key])) {
         prismaStructObject[key] = setUpdatePrismaStructRecursion({
           incomingData: incomingData[key],
-          updateData: updateData?.[key] ?? null,
+          updateData: null,
           createData: createData?.[key] ?? null,
-          deleteData: deleteData?.[key] ?? null,
+          deleteData: null,
         })
       }
       prismaStructObject[key] = prismaStructObject[key] ?? createData[key]

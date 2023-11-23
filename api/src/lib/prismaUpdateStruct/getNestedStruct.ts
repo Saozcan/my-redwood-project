@@ -242,8 +242,6 @@ export function updateNestedData<T>({
     return null
   }
   const createData = getCreateData(incomingData, currentData)
-  console.log('createData: ', createData);
-
   const updateData = getUpdateData(incomingData, currentData)
   const deleteData = getDeleteData(incomingData, currentData)
   clearEmptyFields(createData)
@@ -261,7 +259,7 @@ export function updateNestedData<T>({
       createData,
       deleteData,
     }),
-    { depth: 10 }
+    { depth: 15 }
   )
 }
 
@@ -386,33 +384,33 @@ updateNestedData({
 
 // updateNestedData({ incomingData, currentData })
 
-export function clearEmptyFields(data): boolean {
+function clearEmptyFields(data) {
   if (_.isArray(data)) {
-    data.forEach((item, index) => {
-      if (_.isObject(item)) {
-        if (clearEmptyFields(item)) {
-          data.splice(index, 1)
-        }
-      }
-    })
-  }
-  if (_.isObject(data)) {
-    for (const key in data) {
-      if (_.isArray(data[key])) {
-        if (clearEmptyFields(data[key])) {
-          data[key] = _.compact(data[key])
-          if (_.isEmpty(data[key])) {
-            delete data[key]
-          }
-        }
-      } else if (_.isObject(data[key])) {
-        if (clearEmptyFields(data[key])) {
-          delete data[key]
-        } else return false
-      } else if (key !== 'id') {
-        return false
+    // Iterate backwards through the array to avoid issues with splicing
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (_.isObject(data[i]) && clearEmptyFields(data[i])) {
+        data.splice(i, 1)
       }
     }
+    // Remove the array itself if it's empty after processing
+    return data.length === 0
+  } else if (_.isObject(data)) {
+    const keys = Object.keys(data)
+    // Check if the object only has 'id' as a property
+    if (keys.length === 1 && keys[0] === 'id') {
+      return true
+    }
+    // Recursively process each property of the object
+    keys.forEach((key) => {
+      if (_.isObject(data[key]) && clearEmptyFields(data[key])) {
+        delete data[key]
+      } else if (_.isArray(data[key]) && clearEmptyFields(data[key])) {
+        delete data[key]
+      }
+    })
+    // Check if the object is empty after processing
+    return _.isEmpty(data)
   }
-  return true
+  // Return false for non-object, non-array data
+  return false
 }
