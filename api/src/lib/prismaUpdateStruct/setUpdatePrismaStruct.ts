@@ -92,17 +92,16 @@ export function setUpdatePrismaStructRecursion({
 
   const prismaStructObject = {} as any
   if (_.isObject(incomingData as any)) {
-    if (updateData) {
+    if (incomingData && !createData) {
       prismaStructObject.update = {
         data: partOfUpdatePrismaStruct({
           incomingData: incomingData,
-          updateData: updateData ?? null,
-          createData: createData ?? null,
+          updateData: incomingData ?? null,
         }),
-        where: { id: updateData.id },
+        where: { id: incomingData.id },
       }
     }
-    if (createData) {
+    if (createData && !updateData) {
       prismaStructObject.create = {
         data: partOfCreatePrismaStruct({
           incomingData: incomingData,
@@ -122,7 +121,6 @@ export function setUpdatePrismaStructRecursion({
 export function setUpdatePrismaStruct({
   incomingData,
   updateData,
-  createData,
   deleteData,
 }) {
   const updatePrismaStruct = {}

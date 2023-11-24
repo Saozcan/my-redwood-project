@@ -238,13 +238,11 @@ export function updateNestedData<T>({
   currentData: T
   _options?: object
 }) {
-  if (_.isEqual(incomingData, currentData)) {
+  if (_.isEqualWith(incomingData, currentData, customComparator)) {
     return null
   }
-  const createData = getCreateData(incomingData, currentData)
   const updateData = getUpdateData(incomingData, currentData)
   const deleteData = getDeleteData(incomingData, currentData)
-  clearEmptyFields(createData)
   clearEmptyFields(updateData)
   clearEmptyFields(deleteData)
 
@@ -256,7 +254,6 @@ export function updateNestedData<T>({
   return setUpdatePrismaStruct({
     incomingData,
     updateData,
-    createData,
     deleteData,
   })
 }

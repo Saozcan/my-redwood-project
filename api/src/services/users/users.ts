@@ -30,7 +30,9 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
 }) => {
   const current = await db.user.findUnique({
     where: { id },
-    include: { posts: { include: { postLikes: true, comment: true } } },
+    include: {
+      posts: { include: { comment: { include: { commentLike: true } } } },
+    },
   })
   const generatePrisma = updateNestedData({
     incomingData: { ...input, id },
@@ -38,6 +40,9 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   })
   console.dir(generatePrisma, { depth: 15 })
 
+  if (!generatePrisma) {
+    return { ...input, id } as any
+  }
   return db.user.update(generatePrisma)
   // return db.user.update({
   //   data: {
