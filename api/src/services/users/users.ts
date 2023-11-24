@@ -1,4 +1,4 @@
-import { create, get } from 'lodash'
+import { create, get, update } from 'lodash'
 import type {
   QueryResolvers,
   MutationResolvers,
@@ -42,18 +42,119 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   // return db.user.update({
   //   data: {
   //     posts: {
-  //       update: [
+  //       upsert: [
   //         {
-  //           data: {
-  //             comment: { create: [{ id: 333, content: '555' }] },
+  //           update: {
+  //             id: 4,
+  //             title: '10',
+  //             comment: {
+  //               upsert: [
+  //                 {
+  //                   update: {
+  //                     id: 14,
+  //                     content: 'another update test',
+  //                   },
+  //                   create: {
+  //                     id: 14,
+  //                     content: 'another update test',
+  //                   },
+  //                   where: {
+  //                     id: 14,
+  //                   },
+  //                 },
+  //                 {
+  //                   update: {
+  //                     id: 15,
+  //                     content: 'updateTest',
+  //                   },
+  //                   create: {
+  //                     id: 15,
+  //                     content: 'updateTest',
+  //                   },
+  //                   where: {
+  //                     id: 15,
+  //                   },
+  //                 },
+  //                 {
+  //                   update: {
+  //                     id: 11,
+  //                     content: '123123123',
+  //                     commentLike: {
+  //                       upsert: [
+  //                         {
+  //                           update: {
+  //                             id: 1,
+  //                             likeCount: 123,
+  //                           },
+  //                           create: {
+  //                             id: 1,
+  //                             likeCount: 123,
+  //                           },
+  //                           where: {
+  //                             id: 1,
+  //                           },
+  //                         },
+  //                       ],
+  //                     },
+  //                   },
+  //                   create: {
+  //                     id: 11,
+  //                     content: '123123123',
+  //                     commentLike: {
+  //                       create: [
+  //                         {
+  //                           id: 1,
+  //                           likeCount: 123,
+  //                         },
+  //                       ],
+  //                     },
+  //                   },
+  //                   where: {
+  //                     id: 11,
+  //                   },
+  //                 },
+  //               ],
+  //             },
   //           },
-  //           where: { id: 16 },
+  //           create: {
+  //             id: 4,
+  //             title: '10',
+  //             comment: {
+  //               create: [
+  //                 {
+  //                   id: 14,
+  //                   content: 'another update test',
+  //                 },
+  //                 {
+  //                   id: 15,
+  //                   content: 'updateTest',
+  //                 },
+  //                 {
+  //                   id: 11,
+  //                   content: '123123123',
+  //                   commentLike: {
+  //                     create: [
+  //                       {
+  //                         id: 1,
+  //                         likeCount: 123,
+  //                       },
+  //                     ],
+  //                   },
+  //                 },
+  //               ],
+  //             },
+  //           },
+  //           where: {
+  //             id: 4,
+  //           },
   //         },
   //       ],
   //     },
   //     id: 4,
   //   },
-  //   where: { id: 4 },
+  //   where: {
+  //     id: 4,
+  //   },
   // })
 }
 

@@ -4,6 +4,7 @@ export const schema = gql`
     content: String!
     post: Post!
     postId: Int!
+    commentLike: [CommentLike]!
   }
 
   type Query {
@@ -18,9 +19,9 @@ export const schema = gql`
 
   input UpdateCommentInput {
     id: Int
+    commentLike: [UpdateCommentLikeInput]
     content: String
-    postLikes: [UpdatePostLikeInput]
-    
+    postId: Int
   }
 
   type Mutation {

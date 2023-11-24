@@ -44,4 +44,7 @@ export const Comment: CommentRelationResolvers = {
   post: (_obj, { root }) => {
     return db.comment.findUnique({ where: { id: root?.id } }).post()
   },
+  commentLike: (_obj, { root }) => {
+    return db.comment.findUnique({ where: { id: root?.id } }).commentLike()
+  },
 }

@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 
 const prismaStruct = {
-  update: [],
+  create: [],
   upsert: [],
   delete: [],
 }
@@ -50,32 +50,31 @@ export function setUpdatePrismaStructRecursion({
   createData?: any
   deleteData?: any
 }) {
-  if (!updateData && !createData && !deleteData) {
-    return null
-  }
+  // if (!updateData && !createData && !deleteData) {
+  //   return null
+  // }
   const updatePrismaStruct = _.cloneDeep(prismaStruct)
 
   if (_.isArray(incomingData)) {
-    if (updateData) {
-      updatePrismaStruct.update = updateData.map((item) => ({
-        data: partOfUpdatePrismaStruct({
+    if (incomingData && !createData) {
+      updatePrismaStruct.upsert = incomingData.map((item) => ({
+        update: partOfUpdatePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
-          updateData: updateData.find((j) => j.id === item.id) ?? null,
+          updateData: incomingData.find((j) => j.id === item.id) ?? null,
+        }),
+        create: partOfCreatePrismaStruct({
+          incomingData: incomingData.find((j) => j.id === item.id),
+          createData: incomingData.find((j) => j.id === item.id) ?? null,
         }),
         where: { id: item.id },
       }))
     }
-    if (createData) {
-      updatePrismaStruct.upsert = createData.map((item) => ({
-        create: partOfCreatePrismaStruct({
+    if (createData && !updateData) {
+      updatePrismaStruct.create = createData.map((item) => ({
+        ...partOfCreatePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
           createData: { ...createData.find((j) => j.id === item.id) } ?? null,
         }),
-        update: partOfCreatePrismaStruct({
-          incomingData: incomingData.find((j) => j.id === item.id),
-          createData: { ...createData.find((j) => j.id === item.id) } ?? null,
-        }),
-        where: { id: item.id },
       }))
     }
     if (deleteData) {
@@ -98,6 +97,7 @@ export function setUpdatePrismaStructRecursion({
         data: partOfUpdatePrismaStruct({
           incomingData: incomingData,
           updateData: updateData ?? null,
+          createData: createData ?? null,
         }),
         where: { id: updateData.id },
       }
@@ -131,7 +131,7 @@ export function setUpdatePrismaStruct({
       updatePrismaStruct[key] = setUpdatePrismaStructRecursion({
         incomingData: incomingData[key],
         updateData: updateData?.[key] ?? null,
-        createData: createData?.[key] ?? null,
+        createData: null,
         deleteData: deleteData?.[key] ?? null,
       })
       if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {

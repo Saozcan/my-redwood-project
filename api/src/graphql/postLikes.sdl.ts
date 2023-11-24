@@ -17,7 +17,7 @@ export const schema = gql`
   }
 
   input UpdatePostLikeInput {
-    postId: Int
+    id: Int
     likeCount: Int
   }
 

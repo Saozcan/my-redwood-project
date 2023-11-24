@@ -6,11 +6,10 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // url = "sqlserver://192.168.0.104\\TEST;instance=TEST;database=Sec2023;user=hwn83;password=nwH83;TrustServerCertificate=true;encrypt=false;"
 }
 
 model Post {
-  id        Int        @id @unique
+  id        Int        @id @default(autoincrement())
   title     String?
   content   String?
   User      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -34,10 +33,11 @@ model Category {
 }
 
 model Comment {
-  id      Int    @id @default(autoincrement())
-  content String
-  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId  Int
+  id          Int           @id @default(autoincrement())
+  content     String
+  post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId      Int
+  commentLike CommentLike[]
 }
 
 model PostLike {
@@ -47,3 +47,9 @@ model PostLike {
   post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
+model CommentLike {
+  id        Int     @id @default(autoincrement())
+  commentId Int     @map("comment_id")
+  likeCount Int     @default(0)
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
