@@ -47,118 +47,59 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   // return db.user.update({
   //   data: {
   //     posts: {
-  //       upsert: [
+  //       update: [
   //         {
-  //           update: {
-  //             id: 4,
-  //             title: '10',
+  //           data: {
+  //             id: 8,
   //             comment: {
-  //               upsert: [
+  //               update: [
   //                 {
-  //                   update: {
-  //                     id: 14,
-  //                     content: 'another update test',
-  //                   },
-  //                   create: {
-  //                     id: 14,
-  //                     content: 'another update test',
-  //                   },
-  //                   where: {
-  //                     id: 14,
-  //                   },
-  //                 },
-  //                 {
-  //                   update: {
-  //                     id: 15,
-  //                     content: 'updateTest',
-  //                   },
-  //                   create: {
-  //                     id: 15,
-  //                     content: 'updateTest',
-  //                   },
-  //                   where: {
-  //                     id: 15,
-  //                   },
-  //                 },
-  //                 {
-  //                   update: {
-  //                     id: 11,
-  //                     content: '123123123',
+  //                   data: {
+  //                     id: 5558,
   //                     commentLike: {
-  //                       upsert: [
+  //                       update: [
   //                         {
-  //                           update: {
-  //                             id: 1,
-  //                             likeCount: 123,
-  //                           },
-  //                           create: {
-  //                             id: 1,
-  //                             likeCount: 123,
+  //                           data: {
+  //                             id: 5558,
   //                           },
   //                           where: {
-  //                             id: 1,
+  //                             id: 5558,
   //                           },
   //                         },
   //                       ],
-  //                     },
-  //                   },
-  //                   create: {
-  //                     id: 11,
-  //                     content: '123123123',
-  //                     commentLike: {
-  //                       create: [
+  //                       delete: [
   //                         {
-  //                           id: 1,
-  //                           likeCount: 123,
+  //                           id: 5558,
   //                         },
   //                       ],
   //                     },
   //                   },
   //                   where: {
-  //                     id: 11,
+  //                     id: 5558,
   //                   },
   //                 },
   //               ],
-  //             },
-  //           },
-  //           create: {
-  //             id: 4,
-  //             title: '10',
-  //             comment: {
-  //               create: [
+  //               delete: [
   //                 {
-  //                   id: 14,
-  //                   content: 'another update test',
-  //                 },
-  //                 {
-  //                   id: 15,
-  //                   content: 'updateTest',
-  //                 },
-  //                 {
-  //                   id: 11,
-  //                   content: '123123123',
-  //                   commentLike: {
-  //                     create: [
-  //                       {
-  //                         id: 1,
-  //                         likeCount: 123,
-  //                       },
-  //                     ],
-  //                   },
+  //                   id: 5558,
   //                 },
   //               ],
   //             },
   //           },
   //           where: {
-  //             id: 4,
+  //             id: 8,
   //           },
   //         },
   //       ],
+  //       delete: [
+  //         {
+  //           id: 8,
+  //         },
+  //       ],
   //     },
-  //     id: 4,
   //   },
   //   where: {
-  //     id: 4,
+  //     id: 3,
   //   },
   // })
 }

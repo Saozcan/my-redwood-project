@@ -238,18 +238,30 @@ export function updateNestedData<T>({
   currentData: T
   _options?: object
 }) {
-  if (_.isEqualWith(incomingData, currentData, customComparator)) {
-    return null
-  }
+  // script olusturmada sorun yok fakat getUpdateData tam calismiyor, bir yerde farklilik oldugunda hepsini donuyor.
+  // ikinci asama create yoksa sadece update dongusu olustur.
   const updateData = getUpdateData(incomingData, currentData)
+  const createData = getCreateData(incomingData, currentData)
   const deleteData = getDeleteData(incomingData, currentData)
+  addMissingPropertiesToSecondObject(createData, updateData)
   clearEmptyFields(updateData)
   clearEmptyFields(deleteData)
+  deepCleaningExceptIds(deleteData)
 
   // const merged = deepMergeObjectsForDelete(
   //   _.cloneDeep(incomingData),
   //   _.cloneDeep(deleteData)
   // )
+
+  if (
+    !updateData &&
+    !createData &&
+    (!deleteData ||
+      _.isEmpty(deleteData) ||
+      Object.keys(deleteData).length == 1)
+  ) {
+    return null
+  }
 
   return setUpdatePrismaStruct({
     incomingData,
@@ -289,6 +301,32 @@ export function clearEmptyFields(data) {
   }
   // Return false for non-object, non-array data
   return false
+}
+
+export function addMissingPropertiesToSecondObject(obj1, obj2) {
+  function mergeRecursive(source, target) {
+    if (_.isArray(source)) {
+      console.log('source: ', source)
+
+      source.forEach((value, index) => {
+        if (_.isObject(value)) {
+          mergeRecursive(value, target[index])
+        }
+      })
+    }
+
+    if (_.isObject(source)) {
+      _.forEach(source, (value, key) => {
+        if (!_.has(target, key)) {
+          target[key] = _.cloneDeep(value)
+        } else if (_.isObject(value) && _.isObject(target[key])) {
+          mergeRecursive(value, target[key])
+        }
+      })
+    }
+  }
+
+  mergeRecursive(obj1, obj2)
 }
 
 // export function deepMergeObjectsForDelete(obj1, obj2) {
