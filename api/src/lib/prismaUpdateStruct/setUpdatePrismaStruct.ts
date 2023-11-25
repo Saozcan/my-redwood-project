@@ -93,7 +93,7 @@ export function setUpdatePrismaStructRecursion({
           }),
           create: partOfCreatePrismaStruct({
             incomingData: incomingData.find((j) => j.id === item.id),
-            createData: updateData?.find((j) => j.id === item.id) ?? null,
+            createData: incomingData?.find((j) => j.id === item.id) ?? null,
           }),
           where: updateData?.find((j) => j.id === item.id)
             ? { id: item.id }
@@ -114,7 +114,7 @@ export function setUpdatePrismaStructRecursion({
           ...partOfCreatePrismaStruct({
             incomingData: incomingData.find((j) => j.id === item.id),
             createData:
-              { ...createData?.find((j) => j.id === item.id) } ?? null,
+              { ...incomingData?.find((j) => j.id === item.id) } ?? null,
           }),
         }))
       )
@@ -172,7 +172,7 @@ export function setUpdatePrismaStructRecursion({
         }),
         create: partOfCreatePrismaStruct({
           incomingData: incomingData,
-          createData: updateData ?? null,
+          createData: incomingData ?? null,
         }),
         where: { id: incomingData.id },
       })
@@ -181,7 +181,7 @@ export function setUpdatePrismaStructRecursion({
       prismaStructObject.set('create', {
         data: partOfCreatePrismaStruct({
           incomingData: incomingData,
-          createData: createData ?? null,
+          createData: incomingData ?? null,
         }),
       })
     }
