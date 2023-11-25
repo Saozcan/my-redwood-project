@@ -243,9 +243,10 @@ export function updateNestedData<T>({
   const updateData = getUpdateData(incomingData, currentData)
   const createData = getCreateData(incomingData, currentData)
   const deleteData = getDeleteData(incomingData, currentData)
-  addMissingPropertiesToSecondObject(createData, updateData)
   clearEmptyFields(updateData)
+  clearEmptyFields(createData)
   clearEmptyFields(deleteData)
+  addMissingPropertiesToSecondObject(createData, updateData)
   deepCleaningExceptIds(deleteData)
 
   // const merged = deepMergeObjectsForDelete(
@@ -272,11 +273,11 @@ export function updateNestedData<T>({
 
 // updateNestedData({ incomingData, currentData })
 
-export function clearEmptyFields(data) {
+export function clearEmptyFields(data, options?: { keys: string[] }) {
   if (_.isArray(data)) {
     // Iterate backwards through the array to avoid issues with splicing
     for (let i = data.length - 1; i >= 0; i--) {
-      if (_.isObject(data[i]) && clearEmptyFields(data[i])) {
+      if (_.isObject(data[i]) && clearEmptyFields(data[i], options)) {
         data.splice(i, 1)
       }
     }
@@ -290,10 +291,14 @@ export function clearEmptyFields(data) {
     }
     // Recursively process each property of the object
     keys.forEach((key) => {
-      if (_.isObject(data[key]) && clearEmptyFields(data[key])) {
-        delete data[key]
-      } else if (_.isArray(data[key]) && clearEmptyFields(data[key])) {
-        delete data[key]
+      if (_.isObject(data[key]) && clearEmptyFields(data[key], options)) {
+        if (!options?.keys?.includes(key)) {
+          delete data[key]
+        }
+      } else if (_.isArray(data[key]) && clearEmptyFields(data[key], options)) {
+        if (!options?.keys?.includes(key)) {
+          delete data[key]
+        }
       }
     })
     // Check if the object is empty after processing
@@ -327,6 +332,46 @@ export function addMissingPropertiesToSecondObject(obj1, obj2) {
   }
 
   mergeRecursive(obj1, obj2)
+}
+
+export function deepCleanEmpty(objOrArray) {
+  // Function to determine if an object or array is empty
+  function isEmpty(value) {
+    return (
+      (Array.isArray(value) && value.length === 0) ||
+      (Object.prototype.toString.call(value) === '[object Object]' &&
+        Object.keys(value).length === 0)
+    )
+  }
+
+  // If it's an array, filter out empty objects/arrays and apply recursively
+  if (Array.isArray(objOrArray)) {
+    console.log('objOrArray: ', objOrArray)
+
+    objOrArray.forEach((item, index) => {
+      if (_.isEmpty(item)) {
+        objOrArray.splice(index, 1) // Remove empty objects/arrays
+      }
+    })
+    return objOrArray
+      .map((item) => deepCleanEmpty(item))
+      .filter((item) => !isEmpty(item))
+  }
+  // If it's an object, apply recursively to its properties
+  else if (typeof objOrArray === 'object' && objOrArray !== null) {
+    Object.keys(objOrArray).forEach((key) => {
+      const value = objOrArray[key]
+      if (isEmpty(value)) {
+        delete objOrArray[key] // Remove empty objects/arrays
+      } else {
+        objOrArray[key] = deepCleanEmpty(value) // Apply recursively
+      }
+    })
+    return objOrArray
+  }
+
+  // Return the value if it's neither an object nor an array
+  return objOrArray
 }
 
 // export function deepMergeObjectsForDelete(obj1, obj2) {

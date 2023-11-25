@@ -1,5 +1,7 @@
 import * as _ from 'lodash'
 
+import { clearEmptyFields, deepCleanEmpty } from './getNestedStruct'
+
 const prismaStruct = {
   create: [],
   upsert: [],
@@ -82,7 +84,7 @@ export function setUpdatePrismaStructRecursion({
   if (_.isArray(incomingData)) {
     if (incomingData && !createData && updateData) {
       updatePrismaStruct.set(
-        'update',
+        'upsert',
         incomingData.map((item) => ({
           update: partOfUpdatePrismaStruct({
             incomingData: incomingData.find((j) => j.id === item.id),
@@ -93,9 +95,17 @@ export function setUpdatePrismaStructRecursion({
             incomingData: incomingData.find((j) => j.id === item.id),
             createData: updateData?.find((j) => j.id === item.id) ?? null,
           }),
-          where: { id: item.id },
+          where: updateData?.find((j) => j.id === item.id)
+            ? { id: item.id }
+            : {},
         }))
       )
+      updatePrismaStruct.get('upsert').forEach((value, key) => {
+        deepCleanEmpty(value)
+        if (_.isEmpty(value) || !value) {
+          updatePrismaStruct.get('upsert').splice(key, 1)
+        }
+      })
     }
     if (createData && !updateData) {
       updatePrismaStruct.set(
@@ -137,6 +147,7 @@ export function setUpdatePrismaStructRecursion({
       )
     }
     updatePrismaStruct.forEach((value, key) => {
+      deepCleanEmpty(value)
       if (_.isEmpty(value) || !value) {
         updatePrismaStruct.delete(key)
       }
@@ -153,11 +164,15 @@ export function setUpdatePrismaStructRecursion({
   prismaStructObject.set('delete', {})
   if (_.isObject(incomingData as any)) {
     if (incomingData && !createData && updateData) {
-      prismaStructObject.set('update', {
-        data: partOfUpdatePrismaStruct({
+      prismaStructObject.set('upsert', {
+        update: partOfUpdatePrismaStruct({
           incomingData: incomingData,
           updateData: updateData ?? null,
           deleteData: deleteData ?? null,
+        }),
+        create: partOfCreatePrismaStruct({
+          incomingData: incomingData,
+          createData: updateData ?? null,
         }),
         where: { id: incomingData.id },
       })
