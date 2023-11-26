@@ -330,7 +330,6 @@ export function addMissingPropertiesToSecondObject(obj1, obj2) {
       })
     }
   }
-
   mergeRecursive(obj1, obj2)
 }
 
