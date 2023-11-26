@@ -84,8 +84,8 @@ export function setUpdatePrismaStructRecursion({
   // }
   const updatePrismaStruct = new Map()
   updatePrismaStruct.set('create', [])
-  updatePrismaStruct.set('upsert', [])
   updatePrismaStruct.set('update', [])
+  updatePrismaStruct.set('upsert', [])
   updatePrismaStruct.set('delete', [])
 
   if (_.isArray(incomingData)) {
@@ -131,8 +131,10 @@ export function setUpdatePrismaStructRecursion({
         'delete',
         deleteData?.map((item) => {
           if (isThereAnyProperty(item)) {
+            const id = item.id
+            delete item.id
             return {
-              id: item.id,
+              id,
             }
           }
         })
@@ -158,9 +160,7 @@ export function setUpdatePrismaStructRecursion({
         if (_.has(value, 'data') && _.isEmpty(value.data)) {
           delete value.data
           delete value.where
-          
         }
-
       })
       updatePrismaStruct.set(
         'delete',
@@ -256,7 +256,7 @@ export function setUpdatePrismaStruct({
         incomingData: incomingData[key],
         updateData: updateData?.[key] ?? null,
         createData: null,
-        deleteData: deleteData[key] ?? null,
+        deleteData: deleteData?.[key] ?? null,
       })
       if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {
         delete updatePrismaStruct[key]
@@ -283,8 +283,43 @@ export function setUpdatePrismaStruct({
         delete updatePrismaStruct[key]
       }
     }
+    // d
+  }
+
+  for (const key in updatePrismaStruct) {
+    if (
+      _.has(updatePrismaStruct[key], 'update') &&
+      _.has(updatePrismaStruct[key], 'delete')
+    ) {
+      disableSortForObjectFirstLevel(updatePrismaStruct[key])
+    }
   }
   return { data: updatePrismaStruct, where: { id: incomingData.id } }
 }
 
 // data: setUpdatePrismaStruct({... seklinde calissin
+
+export function disableSortForObjectFirstLevel(object) {
+  const mapObj = new Map()
+  for (const key in object) {
+    if (key === 'update') {
+      mapObj.set(key, _.cloneDeep(object[key]))
+      delete object[key]
+    }
+  }
+  for (const key in object) {
+    if (key === 'upsert') {
+      mapObj.set(key, _.cloneDeep(object[key]))
+      delete object[key]
+    }
+  }
+  for (const key in object) {
+    if (key === 'delete') {
+      mapObj.set(key, _.cloneDeep(object[key]))
+      delete object[key]
+    }
+  }
+
+  const object2 = Object.fromEntries(mapObj)
+  addMissingPropertiesToSecondObject(object2, object)
+}

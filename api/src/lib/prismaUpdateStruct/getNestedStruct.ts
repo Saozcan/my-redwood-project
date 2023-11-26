@@ -375,6 +375,7 @@ export function deepCleanEmpty(objOrArray) {
 }
 
 export function isThereAnyProperty(obj) {
+  if (!_.has(obj, 'id')) return false
   for (const key in obj) {
     if (_.isArray(obj[key]) && obj[key].length > 0) continue
     else if (typeof obj[key] === 'object' && !_.has(obj[key], 'id')) return true
@@ -402,50 +403,50 @@ export function deleteIdIfThereIsNoProperty(obj) {
   }
 }
 
-export function prismaStructSorter(prismaStruct) {
-  const prismaStructObject = new Map(Object.entries(prismaStruct))
-  const sortedPrismaStruct = new Map()
-  prismaStructObject.forEach((value, key) => {
-    if (key === 'create') sortedPrismaStruct.set(key, value)
-  })
-  prismaStructObject.forEach((value, key) => {
-    if (key === 'update') sortedPrismaStruct.set(key, value)
-  })
-  prismaStructObject.forEach((value, key) => {
-    if (key === 'upsert') sortedPrismaStruct.set(key, value)
-  })
-  prismaStructObject.forEach((value, key) => {
-    if (key === 'delete') sortedPrismaStruct.set(key, value)
-  })
+// export function prismaStructSorter(prismaStruct) {
+//   const prismaStructObject = new Map(Object.entries(prismaStruct))
+//   const sortedPrismaStruct = new Map()
+//   prismaStructObject.forEach((value, key) => {
+//     if (key === 'create') sortedPrismaStruct.set(key, value)
+//   })
+//   prismaStructObject.forEach((value, key) => {
+//     if (key === 'update') sortedPrismaStruct.set(key, value)
+//   })
+//   prismaStructObject.forEach((value, key) => {
+//     if (key === 'upsert') sortedPrismaStruct.set(key, value)
+//   })
+//   prismaStructObject.forEach((value, key) => {
+//     if (key === 'delete') sortedPrismaStruct.set(key, value)
+//   })
 
-  return Object.fromEntries(sortedPrismaStruct)
-}
+//   return Object.fromEntries(sortedPrismaStruct)
+// }
 
-export function prismaStructSorterRecursive(prismaStruct) {
-  const clone = _.cloneDeep(prismaStruct)
-  if (_.isArray(clone)) {
-    clone.forEach((item) => {
-      prismaStructSorterRecursive(item)
-    })
-  }
+// export function prismaStructSorterRecursive(prismaStruct) {
+//   const clone = _.cloneDeep(prismaStruct)
+//   if (_.isArray(clone)) {
+//     clone.forEach((item) => {
+//       prismaStructSorterRecursive(item)
+//     })
+//   }
 
-  // harf siralanmasi yapilacak. Sonrasida bitti gibi insallah da ama genede cok sacma
+//   // harf siralanmasi yapilacak. Sonrasida bitti gibi insallah da ama genede cok sacma
 
-  if (_.isObject(clone)) {
-    for (const key in clone) {
-      if (_.isArray(clone[key])) {
-        clone[key].forEach((item) => {
-          prismaStructSorterRecursive(item)
-        })
-      }
-      if (_.isObject(clone[key])) {
-        clone[key] = prismaStructSorterRecursive(clone[key])
-      }
-    }
-  }
+//   if (_.isObject(clone)) {
+//     for (const key in clone) {
+//       if (_.isArray(clone[key])) {
+//         clone[key].forEach((item) => {
+//           prismaStructSorterRecursive(item)
+//         })
+//       }
+//       if (_.isObject(clone[key])) {
+//         clone[key] = prismaStructSorterRecursive(clone[key])
+//       }
+//     }
+//   }
 
-  return Object.fromEntries(sortedPrismaStruct)
-}
+//   return Object.fromEntries(sortedPrismaStruct)
+// }
 
 // export function deepMergeObjectsForDelete(obj1, obj2) {
 //   function mergeIdRecursive(target, source) {
