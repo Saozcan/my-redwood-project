@@ -43,60 +43,75 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   if (!generatePrisma) {
     return { ...input, id } as any
   }
-  return db.user.update(generatePrisma)
+  // return db.user.update(generatePrisma)
   // return db.user.update({
   //   data: {
   //     posts: {
-  //       update: [
+  //       upsert: [
   //         {
-  //           data: {
-  //             id: 8,
+  //           update: {
+  //             id: 1233,
+  //             title: 'asd',
+  //             content: 'qqqq',
   //             comment: {
-  //               update: [
+  //               upsert: [
   //                 {
-  //                   data: {
-  //                     id: 5558,
-  //                     commentLike: {
-  //                       update: [
-  //                         {
-  //                           data: {
-  //                             id: 5558,
-  //                           },
-  //                           where: {
-  //                             id: 5558,
-  //                           },
-  //                         },
-  //                       ],
-  //                       delete: [
-  //                         {
-  //                           id: 5558,
-  //                         },
-  //                       ],
-  //                     },
+  //                   update: {
+  //                     id: 1243,
+  //                     content: '123',
+  //                   },
+  //                   create: {
+  //                     id: 1243,
+  //                     content: '123',
   //                   },
   //                   where: {
-  //                     id: 5558,
+  //                     id: 1243,
   //                   },
   //                 },
   //               ],
-  //               delete: [
+  //             },
+  //           },
+  //           create: {
+  //             id: 1233,
+  //             title: 'asd',
+  //             content: 'qqqq',
+  //             comment: {
+  //               create: [
   //                 {
-  //                   id: 5558,
+  //                   id: 1243,
+  //                   content: '123',
   //                 },
   //               ],
   //             },
   //           },
   //           where: {
-  //             id: 8,
+  //             id: 1233,
+  //           },
+  //         },
+  //       ],
+  //       update: [
+  //         {
+  //           data: {
+  //             comment: {
+  //               delete: [
+  //                 {
+  //                   id: 123,
+  //                 },
+  //               ],
+  //             },
+  //           },
+  //           where: {
+  //             id: 333,
   //           },
   //         },
   //       ],
   //       delete: [
   //         {
-  //           id: 8,
+  //           id: 333,
   //         },
   //       ],
   //     },
+  //     id: 3,
   //   },
   //   where: {
   //     id: 3,
