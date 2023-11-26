@@ -1,6 +1,12 @@
 import * as _ from 'lodash'
 
-import { clearEmptyFields, deepCleanEmpty } from './getNestedStruct'
+import {
+  addMissingPropertiesToSecondObject,
+  clearEmptyFields,
+  deepCleanEmpty,
+  deleteIdIfThereIsNoProperty,
+  isThereAnyProperty,
+} from './getNestedStruct'
 
 const prismaStruct = {
   create: [],
@@ -38,7 +44,6 @@ function partOfDeletePrismaStruct({ incomingData, updateData, deleteData }) {
           deleteData: deleteData?.[key] ?? null,
         })
       }
-      prismaStructObject[key] = prismaStructObject[key] ?? deleteData[key]
     }
   }
 
@@ -66,11 +71,13 @@ export function setUpdatePrismaStructRecursion({
   updateData,
   createData,
   deleteData,
+  options,
 }: {
   incomingData: any
   updateData?: any
   createData?: any
   deleteData?: any
+  options?: any
 }) {
   // if (!updateData && !createData && !deleteData) {
   //   return null
@@ -122,9 +129,13 @@ export function setUpdatePrismaStructRecursion({
     if (deleteData && updateData) {
       updatePrismaStruct.set(
         'delete',
-        deleteData.map((item) => ({
-          id: item.id,
-        }))
+        deleteData?.map((item) => {
+          if (isThereAnyProperty(item)) {
+            return {
+              id: item.id,
+            }
+          }
+        })
       )
     }
     if (deleteData && !updateData) {
@@ -136,14 +147,30 @@ export function setUpdatePrismaStructRecursion({
             updateData: updateData?.find((j) => j.id === item.id) ?? null,
             deleteData: deleteData?.find((j) => j.id === item.id) ?? null,
           }),
-          where: { id: item.id },
+          where: deleteData?.find((j) => j.id === item.id)?.id
+            ? {
+                id: item.id,
+              }
+            : {},
         }))
       )
+      updatePrismaStruct.get('update').forEach((value, key) => {
+        if (_.has(value, 'data') && _.isEmpty(value.data)) {
+          delete value.data
+          delete value.where
+          
+        }
+
+      })
       updatePrismaStruct.set(
         'delete',
-        deleteData.map((item) => ({
-          id: item.id,
-        }))
+        deleteData?.map((item) => {
+          if (isThereAnyProperty(item)) {
+            return {
+              id: item.id,
+            }
+          }
+        })
       )
     }
     updatePrismaStruct.forEach((value, key) => {
@@ -210,7 +237,8 @@ export function setUpdatePrismaStructRecursion({
         prismaStructObject.delete(key)
       }
     })
-    return Object.fromEntries(prismaStructObject)
+    const object = Object.fromEntries(updatePrismaStruct)
+    return object
   }
 }
 
@@ -219,6 +247,8 @@ export function setUpdatePrismaStruct({
   updateData,
   deleteData,
 }) {
+  const cloneDelete = _.cloneDeep(deleteData)
+  deleteIdIfThereIsNoProperty(cloneDelete)
   const updatePrismaStruct = {}
   for (const key in incomingData) {
     if (_.isArray(incomingData[key]) || _.isObject(incomingData[key])) {
@@ -226,7 +256,7 @@ export function setUpdatePrismaStruct({
         incomingData: incomingData[key],
         updateData: updateData?.[key] ?? null,
         createData: null,
-        deleteData: deleteData?.[key] ?? null,
+        deleteData: deleteData[key] ?? null,
       })
       if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {
         delete updatePrismaStruct[key]
@@ -239,17 +269,19 @@ export function setUpdatePrismaStruct({
   //delete
   for (const key in deleteData) {
     if (_.isArray(deleteData[key]) || _.isObject(deleteData[key])) {
-      updatePrismaStruct[key] = setUpdatePrismaStructRecursion({
-        incomingData: deleteData[key],
-        updateData: null,
-        createData: null,
-        deleteData: deleteData?.[key] ?? null,
-      })
+      addMissingPropertiesToSecondObject(
+        setUpdatePrismaStructRecursion({
+          incomingData: deleteData[key],
+          updateData: null,
+          createData: null,
+          deleteData: deleteData[key] ?? null,
+          options: updatePrismaStruct[key],
+        }),
+        updatePrismaStruct[key]
+      )
       if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {
         delete updatePrismaStruct[key]
       }
-    } else {
-      updateData?.[key] && (updatePrismaStruct[key] = deleteData[key])
     }
   }
   return { data: updatePrismaStruct, where: { id: incomingData.id } }

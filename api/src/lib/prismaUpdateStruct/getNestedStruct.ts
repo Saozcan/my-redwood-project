@@ -247,7 +247,7 @@ export function updateNestedData<T>({
   clearEmptyFields(createData)
   clearEmptyFields(deleteData)
   addMissingPropertiesToSecondObject(createData, updateData)
-  deepCleaningExceptIds(deleteData)
+  // deepCleaningExceptIds(deleteData)
 
   // const merged = deepMergeObjectsForDelete(
   //   _.cloneDeep(incomingData),
@@ -372,6 +372,79 @@ export function deepCleanEmpty(objOrArray) {
 
   // Return the value if it's neither an object nor an array
   return objOrArray
+}
+
+export function isThereAnyProperty(obj) {
+  for (const key in obj) {
+    if (_.isArray(obj[key]) && obj[key].length > 0) continue
+    else if (typeof obj[key] === 'object' && !_.has(obj[key], 'id')) return true
+    else if (!_.isObject(obj[key]) && !_.isArray(obj[key]) && key !== 'id') {
+      return true
+    }
+  }
+  return false
+}
+
+export function deleteIdIfThereIsNoProperty(obj) {
+  if (_.isArray(obj)) {
+    obj.forEach((item) => {
+      deleteIdIfThereIsNoProperty(item)
+    })
+  } else if (_.isObject(obj)) {
+    if (!isThereAnyProperty(obj) && _.has(obj, 'id')) {
+      delete obj.id
+    }
+    for (const key in obj) {
+      if (_.isObject(obj[key])) {
+        deleteIdIfThereIsNoProperty(obj[key])
+      }
+    }
+  }
+}
+
+export function prismaStructSorter(prismaStruct) {
+  const prismaStructObject = new Map(Object.entries(prismaStruct))
+  const sortedPrismaStruct = new Map()
+  prismaStructObject.forEach((value, key) => {
+    if (key === 'create') sortedPrismaStruct.set(key, value)
+  })
+  prismaStructObject.forEach((value, key) => {
+    if (key === 'update') sortedPrismaStruct.set(key, value)
+  })
+  prismaStructObject.forEach((value, key) => {
+    if (key === 'upsert') sortedPrismaStruct.set(key, value)
+  })
+  prismaStructObject.forEach((value, key) => {
+    if (key === 'delete') sortedPrismaStruct.set(key, value)
+  })
+
+  return Object.fromEntries(sortedPrismaStruct)
+}
+
+export function prismaStructSorterRecursive(prismaStruct) {
+  const clone = _.cloneDeep(prismaStruct)
+  if (_.isArray(clone)) {
+    clone.forEach((item) => {
+      prismaStructSorterRecursive(item)
+    })
+  }
+
+  // harf siralanmasi yapilacak. Sonrasida bitti gibi insallah da ama genede cok sacma
+
+  if (_.isObject(clone)) {
+    for (const key in clone) {
+      if (_.isArray(clone[key])) {
+        clone[key].forEach((item) => {
+          prismaStructSorterRecursive(item)
+        })
+      }
+      if (_.isObject(clone[key])) {
+        clone[key] = prismaStructSorterRecursive(clone[key])
+      }
+    }
+  }
+
+  return Object.fromEntries(sortedPrismaStruct)
 }
 
 // export function deepMergeObjectsForDelete(obj1, obj2) {
