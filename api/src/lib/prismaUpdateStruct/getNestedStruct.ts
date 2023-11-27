@@ -242,27 +242,26 @@ export function updateNestedData<T>({
   // ikinci asama create yoksa sadece update dongusu olustur.
   const updateData = getUpdateData(incomingData, currentData)
   const createData = getCreateData(incomingData, currentData)
-  const deleteData = getDeleteData(incomingData, currentData)
+  let deleteData = getDeleteData(incomingData, currentData)
   clearEmptyFields(updateData)
   clearEmptyFields(createData)
   clearEmptyFields(deleteData)
-  addMissingPropertiesToSecondObject(createData, updateData)
-  // deepCleaningExceptIds(deleteData)
-
-  // const merged = deepMergeObjectsForDelete(
-  //   _.cloneDeep(incomingData),
-  //   _.cloneDeep(deleteData)
-  // )
 
   if (
-    !updateData &&
-    !createData &&
-    (!deleteData ||
-      _.isEmpty(deleteData) ||
-      Object.keys(deleteData).length == 1)
+    deleteData &&
+    _.keys(deleteData).length === 1 &&
+    _.has(deleteData, 'id') &&
+    incomingData['id'] === deleteData['id']
   ) {
+    deleteData = null
+  }
+
+  if (!updateData && !createData && !deleteData) {
     return null
   }
+
+  addMissingPropertiesToSecondObject(createData, updateData)
+  addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
 
   return setUpdatePrismaStruct({
     incomingData,
@@ -400,6 +399,36 @@ export function deleteIdIfThereIsNoProperty(obj) {
       }
     }
   }
+}
+
+/**
+ * Birinci objedeki propertyleri ikinci objede varsa ekler obje array icin gecerlidir.
+ * @param obj1
+ * @param obj2
+ */
+export function addOnlyOwnPropertiesToSecondObject(obj1, obj2) {
+  function mergeRecursive(source, target) {
+    if (_.isArray(source)) {
+      source.forEach((value) => {
+        if (_.isObject(value) && _.has(value, 'id')) {
+          mergeRecursive(
+            value,
+            target.find((i) => i.id === value.id)
+          )
+        }
+      })
+    }
+    if (_.isObject(source)) {
+      _.forEach(source, (value, key) => {
+        if (target && _.has(target, 'id') && !_.has(target, key)) {
+          target[key] = _.cloneDeep(value)
+        } else if (target && _.isObject(value) && _.isObject(target[key])) {
+          mergeRecursive(value, target[key])
+        }
+      })
+    }
+  }
+  mergeRecursive(obj1, obj2)
 }
 
 // export function prismaStructSorter(prismaStruct) {

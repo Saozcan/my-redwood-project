@@ -142,37 +142,36 @@ export function setUpdatePrismaStructRecursion({
       )
     }
     if (deleteData && !updateData) {
-      const data =
-        incomingData.map((item) => {
-          const data = partOfDeletePrismaStruct({
-            incomingData: incomingData.find((j) => j.id === item.id),
-            updateData: updateData?.find((j) => j.id === item.id) ?? null,
-            deleteData: deleteData?.find((j) => j.id === item.id) ?? null,
-          })
-          if (_.isObject(data)) {
-            for (const key in data) {
-              if (!data[key]) {
-                delete data[key]
-              }
+      const data = incomingData.map((item) => {
+        const data = partOfDeletePrismaStruct({
+          incomingData: incomingData.find((j) => j.id === item.id),
+          updateData: updateData?.find((j) => j.id === item.id) ?? null,
+          deleteData: deleteData?.find((j) => j.id === item.id) ?? null,
+        })
+        if (_.isObject(data)) {
+          for (const key in data) {
+            if (!data[key]) {
+              delete data[key]
             }
           }
-          deepCleanEmpty(data)
-          if (_.isEmpty(data) || !data) {
-            return
-          }
-          return {
-            data: data,
-            where: deleteData?.find((j) => j.id === item.id)?.id
-              ? {
-                  id: item.id,
-                }
-              : {},
-          }
-        }) ?? []
+        }
+        deepCleanEmpty(data)
+        if (_.isEmpty(data) || !data) {
+          return
+        }
+        return {
+          data: data,
+          where: deleteData?.find((j) => j.id === item.id)?.id
+            ? {
+                id: item.id,
+              }
+            : {},
+        }
+      })
+      const compactData = _.compact(data)
+      updatePrismaStruct.set('update', compactData ?? [])
 
-      updatePrismaStruct.set('update', data ?? [])
-
-      updatePrismaStruct.get('update').forEach((value, key) => {
+      updatePrismaStruct.get('update').forEach((value) => {
         if (_.has(value, 'data') && _.isEmpty(value.data)) {
           delete value.data
           delete value.where
@@ -279,7 +278,8 @@ export function setUpdatePrismaStruct({
         delete updatePrismaStruct[key]
       }
     } else {
-      updateData?.[key] && (updatePrismaStruct[key] = updateData[key])
+      updateData?.[key] !== undefined &&
+        (updatePrismaStruct[key] = updateData[key])
     }
   }
 
