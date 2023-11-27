@@ -260,7 +260,7 @@ export function updateNestedData<T>({
     return null
   }
 
-  addMissingPropertiesToSecondObject(createData, updateData)
+  updateData = addMissingPropertiesToSecondObject(createData, updateData)
   addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
 
   return setUpdatePrismaStruct({
@@ -344,7 +344,9 @@ export function addMissingPropertiesToSecondObject(obj1, obj2) {
       })
     }
   }
-  mergeRecursive(obj1, obj2)
+  const obj2Clone = _.cloneDeep(obj2)
+  mergeRecursive(obj1, obj2Clone)
+  return obj2Clone
 }
 
 export function deepCleanEmpty(objOrArray) {

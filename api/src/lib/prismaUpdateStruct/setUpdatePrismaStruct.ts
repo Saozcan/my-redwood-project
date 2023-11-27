@@ -289,7 +289,7 @@ export function setUpdatePrismaStruct({
       if (!updatePrismaStruct[key]) {
         updatePrismaStruct[key] = {}
       }
-      addMissingPropertiesToSecondObject(
+      updatePrismaStruct[key] = addMissingPropertiesToSecondObject(
         setUpdatePrismaStructRecursion({
           incomingData: deleteData[key],
           updateData: null,
@@ -313,7 +313,9 @@ export function setUpdatePrismaStruct({
       (_.has(updatePrismaStruct[key], 'upsert') &&
         _.has(updatePrismaStruct[key], 'update'))
     ) {
-      disableSortForObjectFirstLevel(updatePrismaStruct[key])
+      updatePrismaStruct[key] = disableSortForObjectFirstLevel(
+        updatePrismaStruct[key]
+      )
     }
   }
   return { data: updatePrismaStruct, where: { id: incomingData.id } }
@@ -343,5 +345,5 @@ export function disableSortForObjectFirstLevel(object) {
   }
 
   const object2 = Object.fromEntries(mapObj)
-  addMissingPropertiesToSecondObject(object2, object)
+  return (object = addMissingPropertiesToSecondObject(object2, object))
 }
