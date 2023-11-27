@@ -2,6 +2,12 @@ import * as _ from 'lodash'
 
 import { setUpdatePrismaStruct } from './setUpdatePrismaStruct'
 
+/**
+ * This function is used by isEqualsWith to compare two objects. Specifical situations.
+ * @param objValue
+ * @param othValue
+ * @returns
+ */
 function customComparator(objValue, othValue, key, object, other, stack) {
   // Initialize stack if it's the first call
   if (!stack) {
@@ -165,8 +171,7 @@ function getUpdateData(incomingData, currentData) {
   }
 
   updateData = deepCleaningExceptIds(updateData)
-  setUpdateData(updateData, currentDataClone, incomingData)
-  return updateData
+  return setUpdateData(updateData, currentDataClone, incomingData)
 }
 
 // onjeyi gez, array e dnek gelirsen gez,
@@ -300,9 +305,7 @@ export function getCreateDeleteUpdateData<T>({
   }
 
   updateData = addMissingPropertiesToSecondObject(createData, updateData)
-
   updateData = addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
-
   return {
     updateData,
     createData,
@@ -425,7 +428,7 @@ export function deepCleanEmpty<T>(objOrArray: Readonly<T>) {
   return objOrArray
 }
 
-export function isThereAnyProperty(obj) {
+export function isThereAnyProperty(obj): boolean {
   if (!_.has(obj, 'id')) return false
   for (const key in obj) {
     if (_.isArray(obj[key]) && obj[key].length > 0) continue
@@ -435,23 +438,6 @@ export function isThereAnyProperty(obj) {
     }
   }
   return false
-}
-
-export function deleteIdIfThereIsNoProperty<T>(obj: Readonly<T>) {
-  if (_.isArray(obj)) {
-    obj.forEach((item) => {
-      deleteIdIfThereIsNoProperty(item)
-    })
-  } else if (_.isObject(obj)) {
-    if (!isThereAnyProperty(obj) && _.has(obj, 'id')) {
-      delete (obj as any).id
-    }
-    for (const key in obj) {
-      if (_.isObject(obj[key])) {
-        deleteIdIfThereIsNoProperty(obj[key])
-      }
-    }
-  }
 }
 
 /**

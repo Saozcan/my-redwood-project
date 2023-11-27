@@ -3,7 +3,6 @@ import * as _ from 'lodash'
 import {
   addMissingPropertiesToSecondObject,
   deepCleanEmpty,
-  deleteIdIfThereIsNoProperty,
   isThereAnyProperty,
 } from './getNestedStruct'
 
@@ -58,6 +57,9 @@ function partOfCreatePrismaStruct({ incomingData, createData }) {
   return prismaStructObject
 }
 
+/**
+ * Only works with arrays...
+ */
 export function setUpdatePrismaStructRecursion({
   incomingData,
   updateData,
@@ -71,9 +73,6 @@ export function setUpdatePrismaStructRecursion({
   deleteData?: any
   _options?: any
 }) {
-  // if (!updateData && !createData && !deleteData) {
-  //   return null
-  // }
   const updatePrismaStruct = new Map()
   updatePrismaStruct.set('create', [])
   updatePrismaStruct.set('update', [])
@@ -192,71 +191,76 @@ export function setUpdatePrismaStructRecursion({
     return object
   }
 
-  const prismaStructObject = new Map()
-  prismaStructObject.set('create', {})
-  prismaStructObject.set('update', {})
-  prismaStructObject.set('upsert', {})
-  prismaStructObject.set('delete', {})
-  if (_.isObject(incomingData as any)) {
-    if (incomingData && !createData && updateData) {
-      prismaStructObject.set('upsert', {
-        update: partOfUpdatePrismaStruct({
-          incomingData: incomingData,
-          updateData: updateData ?? null,
-          deleteData: deleteData ?? null,
-        }),
-        create: partOfCreatePrismaStruct({
-          incomingData: incomingData,
-          createData: incomingData ?? null,
-        }),
-        where: { id: incomingData.id },
-      })
-    }
-    if (createData && !updateData) {
-      prismaStructObject.set('create', {
-        data: partOfCreatePrismaStruct({
-          incomingData: incomingData,
-          createData: incomingData ?? null,
-        }),
-      })
-    }
-    if (deleteData && updateData) {
-      prismaStructObject.set('delete', {
-        where: { id: deleteData.id },
-      })
-    }
-    if (deleteData && !updateData) {
-      prismaStructObject.set('update', {
-        data: partOfDeletePrismaStruct({
-          incomingData: incomingData,
-          updateData: updateData ?? null,
-          deleteData: deleteData ?? null,
-        }),
-        where: { id: incomingData.id },
-      })
-      prismaStructObject.set('delete', {
-        where: { id: deleteData.id },
-      })
-    }
-    prismaStructObject.forEach((value, key) => {
-      console.log(key, value)
+  /**
+   * Only works with arrays...
+   */
 
-      if (_.isEmpty(value) || !value) {
-        prismaStructObject.delete(key)
-      }
-    })
-    const object = Object.fromEntries(updatePrismaStruct)
-    return object
-  }
+  // const prismaStructObject = new Map()
+  // prismaStructObject.set('create', {})
+  // prismaStructObject.set('update', {})
+  // prismaStructObject.set('upsert', {})
+  // prismaStructObject.set('delete', {})
+  // if (_.isObject(incomingData as any)) {
+  //   if (incomingData && !createData && updateData) {
+  //     prismaStructObject.set('upsert', {
+  //       update: partOfUpdatePrismaStruct({
+  //         incomingData: incomingData,
+  //         updateData: updateData ?? null,
+  //         deleteData: deleteData ?? null,
+  //       }),
+  //       create: partOfCreatePrismaStruct({
+  //         incomingData: incomingData,
+  //         createData: incomingData ?? null,
+  //       }),
+  //       where: { id: incomingData.id },
+  //     })
+  //   }
+  //   if (createData && !updateData) {
+  //     prismaStructObject.set('create', {
+  //       data: partOfCreatePrismaStruct({
+  //         incomingData: incomingData,
+  //         createData: incomingData ?? null,
+  //       }),
+  //     })
+  //   }
+  //   if (deleteData && updateData) {
+  //     prismaStructObject.set('delete', {
+  //       where: { id: deleteData.id },
+  //     })
+  //   }
+  //   if (deleteData && !updateData) {
+  //     prismaStructObject.set('update', {
+  //       data: partOfDeletePrismaStruct({
+  //         incomingData: incomingData,
+  //         updateData: updateData ?? null,
+  //         deleteData: deleteData ?? null,
+  //       }),
+  //       where: { id: incomingData.id },
+  //     })
+  //     prismaStructObject.set('delete', {
+  //       where: { id: deleteData.id },
+  //     })
+  //   }
+  //   prismaStructObject.forEach((value, key) => {
+  //     console.log(key, value)
+
+  //     if (_.isEmpty(value) || !value) {
+  //       prismaStructObject.delete(key)
+  //     }
+  //   })
+  //   const object = Object.fromEntries(updatePrismaStruct)
+  //   return object
+  // }
 }
 
+/**
+ * It works only first levet of first level object...
+ */
 export function setUpdatePrismaStruct({
   incomingData,
   updateData,
   deleteData,
 }) {
-  const cloneDelete = _.cloneDeep(deleteData)
-  deleteIdIfThereIsNoProperty(cloneDelete)
   const updatePrismaStruct = {}
   for (const key in incomingData) {
     if (_.isArray(incomingData[key]) || _.isObject(incomingData[key])) {
@@ -275,7 +279,10 @@ export function setUpdatePrismaStruct({
     }
   }
 
-  //delete
+  /**
+   * If update and create done and delete not done.
+   * When upsert write if delete some table it write _isDeleted: true
+   */
   for (const key in deleteData) {
     if (_.isArray(deleteData[key]) || _.isObject(deleteData[key])) {
       if (!updatePrismaStruct[key]) {
@@ -295,9 +302,12 @@ export function setUpdatePrismaStruct({
         delete updatePrismaStruct[key]
       }
     }
-    // d
   }
 
+  /**
+   * Prisma exec a query sorted by alphabet and object made it sorted.
+   * We have to use map to disable sort.
+   */
   for (const key in updatePrismaStruct) {
     if (
       (_.has(updatePrismaStruct[key], 'update') &&
@@ -312,8 +322,6 @@ export function setUpdatePrismaStruct({
   }
   return { data: updatePrismaStruct, where: { id: incomingData.id } }
 }
-
-// data: setUpdatePrismaStruct({... seklinde calissin
 
 export function disableSortForObjectFirstLevel(object) {
   const mapObj = new Map()
