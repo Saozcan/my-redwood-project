@@ -240,12 +240,12 @@ export function updateNestedData<T>({
 }) {
   // script olusturmada sorun yok fakat getUpdateData tam calismiyor, bir yerde farklilik oldugunda hepsini donuyor.
   // ikinci asama create yoksa sadece update dongusu olustur.
-  const updateData = getUpdateData(incomingData, currentData)
-  const createData = getCreateData(incomingData, currentData)
+  let updateData = getUpdateData(incomingData, currentData)
+  let createData = getCreateData(incomingData, currentData)
   let deleteData = getDeleteData(incomingData, currentData)
-  clearEmptyFields(updateData)
-  clearEmptyFields(createData)
-  clearEmptyFields(deleteData)
+  updateData = clearEmptyFields(updateData)
+  createData = clearEmptyFields(createData)
+  deleteData = clearEmptyFields(deleteData)
 
   if (
     deleteData &&
@@ -273,38 +273,53 @@ export function updateNestedData<T>({
 // updateNestedData({ incomingData, currentData })
 
 export function clearEmptyFields(data, options?: { keys: string[] }) {
-  if (_.isArray(data)) {
-    // Iterate backwards through the array to avoid issues with splicing
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (_.isObject(data[i]) && clearEmptyFields(data[i], options)) {
-        data.splice(i, 1)
-      }
-    }
-    // Remove the array itself if it's empty after processing
-    return data.length === 0
-  } else if (_.isObject(data)) {
-    const keys = Object.keys(data)
-    // Check if the object only has 'id' as a property
-    if (keys.length === 1 && keys[0] === 'id') {
-      return true
-    }
-    // Recursively process each property of the object
-    keys.forEach((key) => {
-      if (_.isObject(data[key]) && clearEmptyFields(data[key], options)) {
-        if (!options?.keys?.includes(key)) {
-          delete data[key]
-        }
-      } else if (_.isArray(data[key]) && clearEmptyFields(data[key], options)) {
-        if (!options?.keys?.includes(key)) {
-          delete data[key]
+  function clearEmptyFieldsRecursive(data, options?: { keys: string[] }) {
+    if (_.isArray(data)) {
+      // Iterate backwards through the array to avoid issues with splicing
+      for (let i = data.length - 1; i >= 0; i--) {
+        if (
+          _.isObject(data[i]) &&
+          clearEmptyFieldsRecursive(data[i], options)
+        ) {
+          data.splice(i, 1)
         }
       }
-    })
-    // Check if the object is empty after processing
-    return _.isEmpty(data)
+      // Remove the array itself if it's empty after processing
+      return data.length === 0
+    } else if (_.isObject(data)) {
+      const keys = Object.keys(data)
+      // Check if the object only has 'id' as a property
+      if (keys.length === 1 && keys[0] === 'id') {
+        return true
+      }
+      // Recursively process each property of the object
+      keys.forEach((key) => {
+        if (
+          _.isObject(data[key]) &&
+          clearEmptyFieldsRecursive(data[key], options)
+        ) {
+          if (!options?.keys?.includes(key)) {
+            delete data[key]
+          }
+        } else if (
+          _.isArray(data[key]) &&
+          clearEmptyFieldsRecursive(data[key], options)
+        ) {
+          if (!options?.keys?.includes(key)) {
+            delete data[key]
+          }
+        }
+      })
+      // Check if the object is empty after processing
+      return _.isEmpty(data)
+    }
+    // Return false for non-object, non-array data
+    return false
   }
-  // Return false for non-object, non-array data
-  return false
+
+  const clone = _.cloneDeep(data)
+  clearEmptyFieldsRecursive(clone, options)
+  return clone
 }
 
 export function addMissingPropertiesToSecondObject(obj1, obj2) {

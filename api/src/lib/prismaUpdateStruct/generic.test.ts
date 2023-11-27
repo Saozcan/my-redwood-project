@@ -5,7 +5,7 @@ import { clearEmptyFields, updateNestedData } from './getNestedStruct'
 describe('generic prisma struct', () => {
   describe('helper functions', () => {
     it('should remove all empty properties', () => {
-      const data = {
+      let data = {
         id: 1,
         name: 'test',
         posts: [
@@ -29,7 +29,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      clearEmptyFields(data)
+      data = clearEmptyFields(data)
       expect(data).toEqual({
         id: 1,
         name: 'test',
