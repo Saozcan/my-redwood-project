@@ -1,4 +1,3 @@
-import { create, get, update } from 'lodash'
 import type {
   QueryResolvers,
   MutationResolvers,
@@ -6,7 +5,7 @@ import type {
 } from 'types/graphql'
 
 import { db } from 'src/lib/db'
-import { updateNestedData } from 'src/lib/prismaUpdateStruct/getNestedStruct'
+import { getNestedPrismaStruct } from 'src/lib/prismaUpdateStruct/getNestedStruct'
 
 export const users: QueryResolvers['users'] = () => {
   return db.user.findMany()
@@ -34,7 +33,7 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
       posts: { include: { comment: { include: { commentLike: true } } } },
     },
   })
-  const generatePrisma = updateNestedData({
+  const generatePrisma = getNestedPrismaStruct({
     incomingData: { ...input, id },
     currentData: { ...current, id },
   })
@@ -46,28 +45,28 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   return db.user.update(generatePrisma)
 }
 
-export const createNestedUser: MutationResolvers['createNestedUser'] = ({
-  input,
-}) => {
-  return db.user.create({
-    data: {
-      name: 'ahmet',
-      email: 'mehmet',
-      posts: [
-        {
-          context: 'context',
-          title: 'title',
-          comment: [
-            {
-              id: 123,
-              content: 'test',
-            },
-          ],
-        },
-      ],
-    },
-  })
-}
+// export const createNestedUser: MutationResolvers['createNestedUser'] = ({
+//   input,
+// }) => {
+//   return db.user.create({
+//     data: {
+//       name: 'ahmet',
+//       email: 'mehmet',
+//       posts: [
+//         {
+//           context: 'context',
+//           title: 'title',
+//           comment: [
+//             {
+//               id: 123,
+//               content: 'test',
+//             },
+//           ],
+//         },
+//       ],
+//     },
+//   })
+// }
 
 export const deleteUser: MutationResolvers['deleteUser'] = ({ id }) => {
   return db.user.delete({

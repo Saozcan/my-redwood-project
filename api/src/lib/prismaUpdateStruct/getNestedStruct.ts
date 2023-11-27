@@ -7,17 +7,14 @@ function customComparator(objValue, othValue, key, object, other, stack) {
   if (!stack) {
     stack = new Set()
   }
-
   // If either value is an object, do a deep comparison
   if (_.isObject(objValue) && _.isObject(othValue)) {
     // Handle circular references
     if (stack.has(objValue) || stack.has(othValue)) {
       return false
     }
-
     stack.add(objValue)
     stack.add(othValue)
-
     // Iterate over keys in the first object for deep comparison
     for (const k in objValue) {
       if (_.has(objValue, k)) {
@@ -35,42 +32,45 @@ function customComparator(objValue, othValue, key, object, other, stack) {
         }
       }
     }
-
     // Remove the current objects from the stack
     stack.delete(objValue)
     stack.delete(othValue)
-
     // Objects are considered equal if all their corresponding keys matched
     return true
   }
-
   // Direct comparison for non-object values
   return _.isEqual(objValue, othValue)
 }
 
 // tekrar gozden gecirilecek, objeler icin tam id kontrolu saglandi mi bakilacak
-function deepCleaningExceptIds(data) {
-  if (_.isObject(data)) {
-    for (const key in data) {
-      if (_.isObject(data[key]) || _.isArray(data[key])) {
-        if (_.isObject(data[key]) && _.has(data[key], 'id')) {
-          deepCleaningExceptIds(data[key])
+function deepCleaningExceptIds<T>(data: Readonly<T>) {
+  function deepCleaningExceptIdsRecursive(data) {
+    if (_.isObject(data)) {
+      for (const key in data) {
+        if (_.isObject(data[key]) || _.isArray(data[key])) {
+          if (_.isObject(data[key]) && _.has(data[key], 'id')) {
+            deepCleaningExceptIdsRecursive(data[key])
+          }
+          deepCleaningExceptIdsRecursive(data[key])
+        } else if (key !== 'id') {
+          delete data[key]
         }
-        deepCleaningExceptIds(data[key])
-      } else if (key !== 'id') {
-        delete data[key]
       }
+    } else if (_.isArray(data)) {
+      data.forEach((item) => {
+        deepCleaningExceptIdsRecursive(item)
+      })
     }
-  } else if (_.isArray(data)) {
-    data.forEach((item) => {
-      deepCleaningExceptIds(item)
-    })
   }
+  const clone = _.cloneDeep(data)
+  deepCleaningExceptIdsRecursive(clone)
+  return clone
 }
 
 function getCreateData(incoming, current) {
   return getCreateDeleteData(incoming, current)
 }
+
 function getDeleteData(incoming, current) {
   return getCreateDeleteData(current, incoming)
 }
@@ -80,65 +80,73 @@ function getDeleteData(incoming, current) {
  * @param current
  */
 function getCreateDeleteData(incoming, current) {
-  const incomingWithoutIds = _.cloneDeep(incoming)
-  deepCleaningExceptIds(incomingWithoutIds)
-  const currentWithoutIds = _.cloneDeep(current)
-  deepCleaningExceptIds(currentWithoutIds)
+  let incomingWithoutIds = _.cloneDeep(incoming)
+  incomingWithoutIds = deepCleaningExceptIds(incomingWithoutIds)
+  let currentWithoutIds = _.cloneDeep(current)
+  currentWithoutIds = deepCleaningExceptIds(currentWithoutIds)
 
   if (_.isEqualWith(incomingWithoutIds, currentWithoutIds, customComparator)) {
     return null
   }
 
-  setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming)
-  return incomingWithoutIds
+  return setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming)
 }
 
 function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
-  if (!_.isObject(incomingWithoutIds)) return
+  function setCreateDeletDataRecursive(
+    incomingWithoutIds,
+    currentWithoutIds,
+    incoming
+  ) {
+    if (!_.isObject(incomingWithoutIds)) return
 
-  for (const key in incomingWithoutIds) {
-    if (!currentWithoutIds[key]) {
-      incomingWithoutIds[key] = incoming[key]
-      continue
-    }
-    if (_.isArray(incomingWithoutIds[key])) {
-      incomingWithoutIds[key].forEach((item, index) => {
-        if (_.isObject(item)) {
-          if (
-            _.has(item, 'id') &&
-            !currentWithoutIds[key].find((i: any) => {
-              const itemAny = item as any
-              return i.id === itemAny.id
-            })
-          ) {
-            incomingWithoutIds[key][index] = incoming[key][index]
-          } else {
-            setCreateDeletData(
-              item,
-              currentWithoutIds[key].find((i: any) => {
+    for (const key in incomingWithoutIds) {
+      if (!currentWithoutIds[key]) {
+        incomingWithoutIds[key] = incoming[key]
+        continue
+      }
+      if (_.isArray(incomingWithoutIds[key])) {
+        incomingWithoutIds[key].forEach((item, index) => {
+          if (_.isObject(item)) {
+            if (
+              _.has(item, 'id') &&
+              !currentWithoutIds[key].find((i: any) => {
                 const itemAny = item as any
                 return i.id === itemAny.id
-              }),
-              incoming[key][index]
-            )
+              })
+            ) {
+              incomingWithoutIds[key][index] = incoming[key][index]
+            } else {
+              setCreateDeletDataRecursive(
+                item,
+                currentWithoutIds[key].find((i: any) => {
+                  const itemAny = item as any
+                  return i.id === itemAny.id
+                }),
+                incoming[key][index]
+              )
+            }
           }
+        })
+      } else if (_.isObject(incomingWithoutIds[key])) {
+        if (
+          _.has(incomingWithoutIds[key], 'id') &&
+          !_.has(currentWithoutIds[key], 'id')
+        ) {
+          incomingWithoutIds[key] = incoming[key]
+        } else {
+          setCreateDeletDataRecursive(
+            incomingWithoutIds[key],
+            currentWithoutIds[key],
+            incoming[key]
+          )
         }
-      })
-    } else if (_.isObject(incomingWithoutIds[key])) {
-      if (
-        _.has(incomingWithoutIds[key], 'id') &&
-        !_.has(currentWithoutIds[key], 'id')
-      ) {
-        incomingWithoutIds[key] = incoming[key]
-      } else {
-        setCreateDeletData(
-          incomingWithoutIds[key],
-          currentWithoutIds[key],
-          incoming[key]
-        )
       }
     }
   }
+  const clone = _.cloneDeep(incomingWithoutIds)
+  setCreateDeletDataRecursive(clone, currentWithoutIds, incoming)
+  return clone
 }
 
 /**
@@ -149,14 +157,14 @@ function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
  * eger yoksa ikinci katman bakilacak recursive bir sekilde olacak
  */
 function getUpdateData(incomingData, currentData) {
-  const updateData = _.cloneDeep(incomingData)
+  let updateData = _.cloneDeep(incomingData)
   const currentDataClone = _.cloneDeep(currentData)
 
   if (_.isEqualWith(updateData, currentDataClone, customComparator)) {
     return null
   }
 
-  deepCleaningExceptIds(updateData)
+  updateData = deepCleaningExceptIds(updateData)
   setUpdateData(updateData, currentDataClone, incomingData)
   return updateData
 }
@@ -164,49 +172,58 @@ function getUpdateData(incomingData, currentData) {
 // onjeyi gez, array e dnek gelirsen gez,
 // objeye denk gelirsen
 function setUpdateData(updateData, currentData, incomingData) {
-  if (!_.isObject(incomingData) || !_.isObject(currentData)) return
+  function setUpdateDataRecursive(updateData, currentData, incomingData) {
+    if (!_.isObject(incomingData) || !_.isObject(currentData)) return
 
-  if (!_.isEqualWith(incomingData, currentData, firstLevelComparator)) {
-    for (const key in incomingData) {
-      if (!_.isArray(incomingData[key]) && !_.isObject(incomingData[key])) {
-        updateData[key] = incomingData[key]
-      } else if (_.isObject(incomingData[key])) {
-        if (
-          !_.has(incomingData[key], 'id') &&
-          !_.isEqualWith(
-            incomingData[key],
-            currentData[key],
-            firstLevelComparator
-          )
-        ) {
+    if (!_.isEqualWith(incomingData, currentData, firstLevelComparator)) {
+      for (const key in incomingData) {
+        if (!_.isArray(incomingData[key]) && !_.isObject(incomingData[key])) {
           updateData[key] = incomingData[key]
-        }
-      }
-    }
-  }
-
-  for (const key in incomingData) {
-    if (_.isArray(incomingData[key])) {
-      incomingData[key].forEach((item, index) => {
-        if (_.isObject(item)) {
-          if (currentData[key]) {
-            setUpdateData(
-              updateData[key][index],
-              currentData[key].find((i: any) => {
-                const itemAny = item as any
-                return i.id === itemAny.id
-              }),
-              incomingData[key][index]
+        } else if (_.isObject(incomingData[key])) {
+          if (
+            !_.has(incomingData[key], 'id') &&
+            !_.isEqualWith(
+              incomingData[key],
+              currentData[key],
+              firstLevelComparator
             )
+          ) {
+            updateData[key] = incomingData[key]
           }
         }
-      })
-    } else if (_.isObject(incomingData[key])) {
-      if (currentData[key]) {
-        setUpdateData(updateData[key], currentData[key], incomingData[key])
+      }
+    }
+
+    for (const key in incomingData) {
+      if (_.isArray(incomingData[key])) {
+        incomingData[key].forEach((item, index) => {
+          if (_.isObject(item)) {
+            if (currentData[key]) {
+              setUpdateDataRecursive(
+                updateData[key][index],
+                currentData[key].find((i: any) => {
+                  const itemAny = item as any
+                  return i.id === itemAny.id
+                }),
+                incomingData[key][index]
+              )
+            }
+          }
+        })
+      } else if (_.isObject(incomingData[key])) {
+        if (currentData[key]) {
+          setUpdateDataRecursive(
+            updateData[key],
+            currentData[key],
+            incomingData[key]
+          )
+        }
       }
     }
   }
+  const clone = _.cloneDeep(updateData)
+  setUpdateDataRecursive(clone, currentData, incomingData)
+  return clone
 }
 
 function firstLevelComparator(objValue, othValue) {
@@ -229,13 +246,39 @@ function firstLevelComparator(objValue, othValue) {
   return true
 }
 
-export function updateNestedData<T>({
+export function getNestedPrismaStruct<T>({
   incomingData,
   currentData,
   _options,
 }: {
-  incomingData: T
-  currentData: T
+  incomingData: Readonly<T>
+  currentData: Readonly<T>
+  _options?: object
+}) {
+  const { updateData, deleteData } = getCreateDeleteUpdateData({
+    incomingData,
+    currentData,
+    _options,
+  })
+
+  if (!updateData && !deleteData) {
+    return null
+  }
+
+  return setUpdatePrismaStruct({
+    incomingData,
+    updateData,
+    deleteData,
+  })
+}
+
+export function getCreateDeleteUpdateData<T>({
+  incomingData,
+  currentData,
+  _options,
+}: {
+  incomingData: Readonly<T>
+  currentData: Readonly<T>
   _options?: object
 }) {
   // script olusturmada sorun yok fakat getUpdateData tam calismiyor, bir yerde farklilik oldugunda hepsini donuyor.
@@ -256,21 +299,16 @@ export function updateNestedData<T>({
     deleteData = null
   }
 
-  if (!updateData && !createData && !deleteData) {
-    return null
-  }
-
   updateData = addMissingPropertiesToSecondObject(createData, updateData)
-  addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
 
-  return setUpdatePrismaStruct({
-    incomingData,
+  updateData = addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
+
+  return {
     updateData,
+    createData,
     deleteData,
-  })
+  }
 }
-
-// updateNestedData({ incomingData, currentData })
 
 export function clearEmptyFields(data, options?: { keys: string[] }) {
   function clearEmptyFieldsRecursive(data, options?: { keys: string[] }) {
@@ -367,7 +405,7 @@ export function deepCleanEmpty<T>(objOrArray: Readonly<T>) {
       }
     })
     return objOrArray
-      .map((item) => deepCleanEmpty(item))
+      .map((item) => (item = deepCleanEmpty(item)))
       .filter((item) => !isEmpty(item))
   }
   // If it's an object, apply recursively to its properties
@@ -446,5 +484,7 @@ export function addOnlyOwnPropertiesToSecondObject<T>(
       })
     }
   }
-  mergeRecursive(obj1, obj2)
+  const clone = _.cloneDeep(obj2)
+  mergeRecursive(obj1, clone)
+  return clone
 }

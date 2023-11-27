@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 
-import { clearEmptyFields } from './getNestedStruct'
+import { clearEmptyFields } from '../getNestedStruct'
 
 describe('generic prisma struct', () => {
   describe('helper functions', () => {
@@ -35,5 +35,8 @@ describe('generic prisma struct', () => {
         name: 'test',
       })
     })
+
+ 
+
   })
 })

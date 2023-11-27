@@ -100,7 +100,7 @@ export function setUpdatePrismaStructRecursion({
         }))
       )
       updatePrismaStruct.get('upsert').forEach((value, key) => {
-        deepCleanEmpty(value)
+        value = deepCleanEmpty(value)
         if (_.isEmpty(value) || !value) {
           updatePrismaStruct.get('upsert').splice(key, 1)
         }
@@ -135,7 +135,7 @@ export function setUpdatePrismaStructRecursion({
     }
     if (deleteData && !updateData) {
       const data = incomingData.map((item) => {
-        const data = partOfDeletePrismaStruct({
+        let data = partOfDeletePrismaStruct({
           incomingData: incomingData.find((j) => j.id === item.id),
           updateData: updateData?.find((j) => j.id === item.id) ?? null,
           deleteData: deleteData?.find((j) => j.id === item.id) ?? null,
@@ -147,7 +147,7 @@ export function setUpdatePrismaStructRecursion({
             }
           }
         }
-        deepCleanEmpty(data)
+        data = deepCleanEmpty(data)
         if (_.isEmpty(data) || !data) {
           return
         }
@@ -182,7 +182,7 @@ export function setUpdatePrismaStructRecursion({
     }
     updatePrismaStruct.forEach((value, key) => {
       value = _.compact(value)
-      deepCleanEmpty(value)
+      value = deepCleanEmpty(value)
       if (_.isEmpty(value) || !value) {
         updatePrismaStruct.delete(key)
       }

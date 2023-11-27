@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 
-import { updateNestedData } from './getNestedStruct'
+import { getNestedPrismaStruct } from '../getNestedStruct'
 
 describe('generic prisma struct', () => {
   describe('give the object and take the prisma struct or null', () => {
@@ -11,7 +11,7 @@ describe('generic prisma struct', () => {
     }
 
     it('check null', () => {
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: data,
         currentData: _.cloneDeep(data),
       })
@@ -22,7 +22,7 @@ describe('generic prisma struct', () => {
     it('check update basic', () => {
       const copyData = _.cloneDeep(data)
       copyData.name = 'update'
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: copyData,
         currentData: _.cloneDeep(data),
       })
@@ -43,7 +43,7 @@ describe('generic prisma struct', () => {
           title: 'update',
         },
       ]
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: copyData,
         currentData: _.cloneDeep(data),
       })
@@ -88,7 +88,7 @@ describe('generic prisma struct', () => {
           ],
         },
       ]
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: copyData,
         currentData: _.cloneDeep(data),
       })
@@ -146,7 +146,7 @@ describe('generic prisma struct', () => {
           ],
         },
       ]
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: copyData,
         currentData: _.cloneDeep(data),
       })
@@ -232,7 +232,7 @@ describe('generic prisma struct', () => {
       const incomingWithoutLastTable = _.cloneDeep(copyData)
       delete incomingWithoutLastTable.posts[0].comment[0].commentLike
 
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
@@ -287,7 +287,7 @@ describe('generic prisma struct', () => {
       const incomingWithoutLastTable = _.cloneDeep(copyData)
       delete incomingWithoutLastTable.posts[0].comment
 
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
@@ -343,7 +343,7 @@ describe('generic prisma struct', () => {
       const incomingWithoutLastTable = _.cloneDeep(copyData)
       delete incomingWithoutLastTable.posts
 
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
@@ -406,7 +406,7 @@ describe('generic prisma struct', () => {
         },
       ]
 
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
@@ -507,7 +507,7 @@ describe('generic prisma struct', () => {
         },
       ]
 
-      const prismaStruct = updateNestedData({
+      const prismaStruct = getNestedPrismaStruct({
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
@@ -582,6 +582,118 @@ describe('generic prisma struct', () => {
                 },
               },
               where: { id: 1 },
+            },
+          ],
+        },
+      }
+
+      expect(prismaStruct.data).toEqual(genericResult)
+    })
+
+    it('update first nested ', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'update',
+        },
+      ]
+      const incomingWithoutLastTable = _.cloneDeep(copyData)
+      incomingWithoutLastTable.posts[0].title = 'update2'
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: incomingWithoutLastTable,
+        currentData: copyData,
+      })
+
+      const genericResult = {
+        name: 'Ali',
+        id: 4,
+        email: 'email@email.com',
+        posts: {
+          upsert: [
+            {
+              update: {
+                id: 1,
+                title: 'update2',
+              },
+              create: {
+                id: 1,
+                title: 'update2',
+              },
+              where: {
+                id: 1,
+              },
+            },
+          ],
+        },
+      }
+
+      expect(prismaStruct.data).toEqual(genericResult)
+    })
+
+    it('update second level', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          comment: [
+            {
+              id: 1,
+              content: 'update',
+            },
+          ],
+        },
+      ]
+      const incomingWithoutLastTable = _.cloneDeep(copyData)
+      incomingWithoutLastTable.posts[0].comment[0].content = 'update2'
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: incomingWithoutLastTable,
+        currentData: copyData,
+      })
+
+      const genericResult = {
+        name: 'Ali',
+        id: 4,
+        email: 'email@email.com',
+        posts: {
+          upsert: [
+            {
+              update: {
+                id: 1,
+                comment: {
+                  upsert: [
+                    {
+                      update: {
+                        id: 1,
+                        content: 'update2',
+                      },
+                      create: {
+                        id: 1,
+                        content: 'update2',
+                      },
+                      where: {
+                        id: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              create: {
+                id: 1,
+                comment: {
+                  create: [
+                    {
+                      id: 1,
+                      content: 'update2',
+                    },
+                  ],
+                },
+              },
+              where: {
+                id: 1,
+              },
             },
           ],
         },
