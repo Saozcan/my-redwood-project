@@ -283,14 +283,14 @@ export function getNestedPrismaStruct<T>({
 }
 
 /**
- * Is there any change between incoming and current data except ids => create updateData
+ *  * Is there any change between incoming and current data except ids => create updateData
  *
- * First clean all data except ids and objects which has id
- * Is there any change between incoming and current data => create CreateData and DeleteData
+ *  * First clean all data except ids and objects which has id
+ *  * Is there any change between incoming and current data => create CreateData and DeleteData
  *
- * If deleteData has only id so dont delete it, if there are more properties then delete it.
+ *  * If deleteData has only id so dont delete it, if there are more properties then delete it.
  *
- * If the table to be deleted has only ID and related tables, this will not work!!!!!!!
+ *  ! If the table to be deleted has only ID and related tables, this will not work!!!!!!!
  */
 export function getCreateDeleteUpdateData<T>({
   incomingData,
