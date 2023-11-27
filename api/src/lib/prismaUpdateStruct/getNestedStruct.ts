@@ -251,6 +251,11 @@ function firstLevelComparator(objValue, othValue) {
   return true
 }
 
+/**
+ * Not need to use create object, cause we are using upsert
+ * Upsert use update and create together, if update didnt work then create
+ * Compare create and update data onto updateData
+ */
 export function getNestedPrismaStruct<T>({
   incomingData,
   currentData,
@@ -277,6 +282,16 @@ export function getNestedPrismaStruct<T>({
   })
 }
 
+/**
+ * Is there any change between incoming and current data except ids => create updateData
+ *
+ * First clean all data except ids and objects which has id
+ * Is there any change between incoming and current data => create CreateData and DeleteData
+ *
+ * If deleteData has only id so dont delete it, if there are more properties then delete it.
+ *
+ * If the table to be deleted has only ID and related tables, this will not work!!!!!!!
+ */
 export function getCreateDeleteUpdateData<T>({
   incomingData,
   currentData,
@@ -286,8 +301,6 @@ export function getCreateDeleteUpdateData<T>({
   currentData: Readonly<T>
   _options?: object
 }) {
-  // script olusturmada sorun yok fakat getUpdateData tam calismiyor, bir yerde farklilik oldugunda hepsini donuyor.
-  // ikinci asama create yoksa sadece update dongusu olustur.
   let updateData = getUpdateData(incomingData, currentData)
   let createData = getCreateData(incomingData, currentData)
   let deleteData = getDeleteData(incomingData, currentData)
