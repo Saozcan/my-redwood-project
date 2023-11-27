@@ -349,7 +349,7 @@ export function addMissingPropertiesToSecondObject(obj1, obj2) {
   return obj2Clone
 }
 
-export function deepCleanEmpty(objOrArray) {
+export function deepCleanEmpty<T>(objOrArray: Readonly<T>) {
   // Function to determine if an object or array is empty
   function isEmpty(value) {
     return (
@@ -401,14 +401,14 @@ export function isThereAnyProperty(obj) {
   return false
 }
 
-export function deleteIdIfThereIsNoProperty(obj) {
+export function deleteIdIfThereIsNoProperty<T>(obj: Readonly<T>) {
   if (_.isArray(obj)) {
     obj.forEach((item) => {
       deleteIdIfThereIsNoProperty(item)
     })
   } else if (_.isObject(obj)) {
     if (!isThereAnyProperty(obj) && _.has(obj, 'id')) {
-      delete obj.id
+      delete (obj as any).id
     }
     for (const key in obj) {
       if (_.isObject(obj[key])) {
@@ -423,14 +423,17 @@ export function deleteIdIfThereIsNoProperty(obj) {
  * @param obj1
  * @param obj2
  */
-export function addOnlyOwnPropertiesToSecondObject(obj1, obj2) {
+export function addOnlyOwnPropertiesToSecondObject<T>(
+  obj1: Readonly<T>,
+  obj2: Readonly<T>
+) {
   function mergeRecursive(source, target) {
     if (_.isArray(source)) {
       source.forEach((value) => {
         if (_.isObject(value) && _.has(value, 'id')) {
           mergeRecursive(
             value,
-            target.find((i) => i.id === value.id)
+            target.find((i) => i.id === (value as any).id)
           )
         }
       })
@@ -447,109 +450,3 @@ export function addOnlyOwnPropertiesToSecondObject(obj1, obj2) {
   }
   mergeRecursive(obj1, obj2)
 }
-
-// export function prismaStructSorter(prismaStruct) {
-//   const prismaStructObject = new Map(Object.entries(prismaStruct))
-//   const sortedPrismaStruct = new Map()
-//   prismaStructObject.forEach((value, key) => {
-//     if (key === 'create') sortedPrismaStruct.set(key, value)
-//   })
-//   prismaStructObject.forEach((value, key) => {
-//     if (key === 'update') sortedPrismaStruct.set(key, value)
-//   })
-//   prismaStructObject.forEach((value, key) => {
-//     if (key === 'upsert') sortedPrismaStruct.set(key, value)
-//   })
-//   prismaStructObject.forEach((value, key) => {
-//     if (key === 'delete') sortedPrismaStruct.set(key, value)
-//   })
-
-//   return Object.fromEntries(sortedPrismaStruct)
-// }
-
-// export function prismaStructSorterRecursive(prismaStruct) {
-//   const clone = _.cloneDeep(prismaStruct)
-//   if (_.isArray(clone)) {
-//     clone.forEach((item) => {
-//       prismaStructSorterRecursive(item)
-//     })
-//   }
-
-//   // harf siralanmasi yapilacak. Sonrasida bitti gibi insallah da ama genede cok sacma
-
-//   if (_.isObject(clone)) {
-//     for (const key in clone) {
-//       if (_.isArray(clone[key])) {
-//         clone[key].forEach((item) => {
-//           prismaStructSorterRecursive(item)
-//         })
-//       }
-//       if (_.isObject(clone[key])) {
-//         clone[key] = prismaStructSorterRecursive(clone[key])
-//       }
-//     }
-//   }
-
-//   return Object.fromEntries(sortedPrismaStruct)
-// }
-
-// export function deepMergeObjectsForDelete(obj1, obj2) {
-//   function mergeIdRecursive(target, source) {
-//     if (_.isArray(target) && _.isArray(source)) {
-//       // Iterate over each element in the array
-//       target.forEach((item, index) => {
-//         if (source[index]) {
-//           mergeIdRecursive(item, source[index])
-//         }
-//       })
-//     } else if (_.isObject(target) && _.isObject(source)) {
-//       // Iterate over each key in the object
-//       _.forEach(source, (value, key) => {
-//         if (key === 'id') {
-//           target[key] = value // Merge 'id' key
-//         } else if (_.isObject(value) && _.isObject(target[key])) {
-//           mergeIdRecursive(target[key], value) // Recurse for nested objects
-//         }
-//       })
-//     }
-//   }
-
-//   // Create a deep copy of the first object to avoid mutating it
-//   const mergedObj = _.cloneDeep(obj1)
-
-//   // Start the recursive merging process
-//   mergeIdRecursive(mergedObj, obj2)
-
-//   return mergedObj
-// }
-
-// export function deepMergedForDelete(obj1: object, obj2: object) {
-//   if (_.isEqual(obj1, obj2)) return obj1
-//   if (_.isEmpty(obj2) || !obj2) return obj1
-
-//   function mergeRecursive(source, target) {
-//     if (_.isObject(target)) {
-//       if (!_.isObject(source)) {
-//         Object.assign(source, target)
-//       }
-//       for (const key in target) {
-//         if (_.isObject(target[key]) || _.isArray(target[key])) {
-//           source[key] = mergeRecursive(source[key], target[key])
-//         } else if (key === 'id' && !source[key]) {
-//           source[key] = target[key]
-//         }
-//       }
-//     } else if (_.isArray(target)) {
-//       if (!source) source = target
-//     } else {
-//       source.forEach((i) =>
-//         mergeRecursive(
-//           source.find((j) => (i.id = j.id)),
-//           i
-//         )
-//       )
-//     }
-//   }
-
-//   return mergeRecursive(_.cloneDeep(obj1), obj2)
-// }

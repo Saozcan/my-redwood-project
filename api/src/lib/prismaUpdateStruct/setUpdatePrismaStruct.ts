@@ -2,18 +2,10 @@ import * as _ from 'lodash'
 
 import {
   addMissingPropertiesToSecondObject,
-  clearEmptyFields,
   deepCleanEmpty,
   deleteIdIfThereIsNoProperty,
   isThereAnyProperty,
 } from './getNestedStruct'
-
-const prismaStruct = {
-  create: [],
-  upsert: [],
-  update: [],
-  delete: [],
-}
 
 function partOfUpdatePrismaStruct({ incomingData, updateData, deleteData }) {
   const prismaStructObject = {} as any
@@ -71,13 +63,13 @@ export function setUpdatePrismaStructRecursion({
   updateData,
   createData,
   deleteData,
-  options,
+  _options,
 }: {
   incomingData: any
   updateData?: any
   createData?: any
   deleteData?: any
-  options?: any
+  _options?: any
 }) {
   // if (!updateData && !createData && !deleteData) {
   //   return null
@@ -295,7 +287,7 @@ export function setUpdatePrismaStruct({
           updateData: null,
           createData: null,
           deleteData: deleteData[key] ?? null,
-          options: updatePrismaStruct[key],
+          _options: updatePrismaStruct[key],
         }),
         updatePrismaStruct[key]
       )
