@@ -361,8 +361,6 @@ export function deepCleanEmpty<T>(objOrArray: Readonly<T>) {
 
   // If it's an array, filter out empty objects/arrays and apply recursively
   if (Array.isArray(objOrArray)) {
-    console.log('objOrArray: ', objOrArray)
-
     objOrArray.forEach((item, index) => {
       if (_.isEmpty(item)) {
         objOrArray.splice(index, 1) // Remove empty objects/arrays

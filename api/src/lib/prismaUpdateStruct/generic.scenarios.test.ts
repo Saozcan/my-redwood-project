@@ -70,7 +70,6 @@ describe('generic prisma struct', () => {
           ],
         },
       }
-      console.log(prismaStruct.data)
 
       expect(prismaStruct.data).toEqual(genericResult)
     })
@@ -124,8 +123,6 @@ describe('generic prisma struct', () => {
           ],
         },
       }
-      console.log(prismaStruct.data)
-
       expect(prismaStruct.data).toEqual(genericResult)
     })
 
@@ -240,8 +237,6 @@ describe('generic prisma struct', () => {
         currentData: copyData,
       })
 
-      console.log(prismaStruct)
-
       const genericResult = {
         posts: {
           update: [
@@ -296,8 +291,6 @@ describe('generic prisma struct', () => {
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
-
-      console.log(prismaStruct)
 
       const genericResult = {
         posts: {
@@ -354,8 +347,6 @@ describe('generic prisma struct', () => {
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
-
-      console.log(prismaStruct)
 
       const genericResult = {
         posts: {
@@ -419,8 +410,6 @@ describe('generic prisma struct', () => {
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
-
-      console.log(prismaStruct)
 
       const genericResult = {
         name: 'Ali',
@@ -522,8 +511,6 @@ describe('generic prisma struct', () => {
         incomingData: incomingWithoutLastTable,
         currentData: copyData,
       })
-
-      console.log(prismaStruct)
 
       const genericResult = {
         name: 'Ali',
