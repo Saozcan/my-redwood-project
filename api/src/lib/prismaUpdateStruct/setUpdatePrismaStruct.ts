@@ -122,8 +122,8 @@ export function setUpdatePrismaStructRecursion({
         'delete',
         _.compact(
           deleteData?.map((item) => {
-            if (isThereAnyProperty(item) && !_.has(item, '_isDeleted')) {
-              item._isDeleted = true
+            if (isThereAnyProperty(item) && !_.has(item, '__isDeleted')) {
+              item.__isDeleted = true
               return {
                 id: item.id,
               }
@@ -171,7 +171,7 @@ export function setUpdatePrismaStructRecursion({
       updatePrismaStruct.set(
         'delete',
         deleteData?.map((item) => {
-          if (isThereAnyProperty(item) && !_.has(item, '_isDeleted')) {
+          if (isThereAnyProperty(item) && !_.has(item, '__isDeleted')) {
             return {
               id: item.id,
             }
@@ -254,7 +254,7 @@ export function setUpdatePrismaStructRecursion({
 }
 
 /**
- ** It works only first levet of first level object...
+ ** It works only first level of first level object...
  */
 export function setUpdatePrismaStruct({
   incomingData,
@@ -289,7 +289,7 @@ export function setUpdatePrismaStruct({
 
   /**
    * If update and create done and delete not done.
-   * When upsert write if delete some table it write _isDeleted: true
+   * When upsert write if delete some table it write __isDeleted: true
    */
   for (const key in deleteData) {
     if (_.isArray(deleteData[key]) || _.isObject(deleteData[key])) {

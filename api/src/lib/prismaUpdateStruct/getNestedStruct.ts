@@ -3,10 +3,7 @@ import * as _ from 'lodash'
 import { setUpdatePrismaStruct } from './setUpdatePrismaStruct'
 
 /**
- * This function is used by isEqualsWith to compare two objects. Specifical situations.
- * @param objValue
- * @param othValue
- * @returns
+ * This function is used by isEqualsWith to compare two objects. Specific situations.
  */
 function customComparator(objValue, othValue, key, object, other, stack) {
   // Initialize stack if it's the first call
@@ -48,7 +45,6 @@ function customComparator(objValue, othValue, key, object, other, stack) {
   return _.isEqual(objValue, othValue)
 }
 
-// tekrar gozden gecirilecek, objeler icin tam id kontrolu saglandi mi bakilacak
 function deepCleaningExceptIds<T>(data: Readonly<T>) {
   function deepCleaningExceptIdsRecursive(data) {
     if (_.isObject(data)) {
@@ -82,8 +78,6 @@ function getDeleteData(incoming, current) {
 }
 /**
  * if you change the current and incoming it gives the delete data
- * @param incoming
- * @param current
  */
 function getCreateDeleteData(incoming, current) {
   let incomingWithoutIds = _.cloneDeep(incoming)
@@ -95,11 +89,11 @@ function getCreateDeleteData(incoming, current) {
     return null
   }
 
-  return setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming)
+  return setCreateDeleteData(incomingWithoutIds, currentWithoutIds, incoming)
 }
 
-function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
-  function setCreateDeletDataRecursive(
+function setCreateDeleteData(incomingWithoutIds, currentWithoutIds, incoming) {
+  function setCreateDeleteDataRecursive(
     incomingWithoutIds,
     currentWithoutIds,
     incoming
@@ -123,7 +117,7 @@ function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
             ) {
               incomingWithoutIds[key][index] = incoming[key][index]
             } else {
-              setCreateDeletDataRecursive(
+              setCreateDeleteDataRecursive(
                 item,
                 currentWithoutIds[key].find((i: any) => {
                   const itemAny = item as any
@@ -141,7 +135,7 @@ function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
         ) {
           incomingWithoutIds[key] = incoming[key]
         } else {
-          setCreateDeletDataRecursive(
+          setCreateDeleteDataRecursive(
             incomingWithoutIds[key],
             currentWithoutIds[key],
             incoming[key]
@@ -151,16 +145,13 @@ function setCreateDeletData(incomingWithoutIds, currentWithoutIds, incoming) {
     }
   }
   const clone = _.cloneDeep(incomingWithoutIds)
-  setCreateDeletDataRecursive(clone, currentWithoutIds, incoming)
+  setCreateDeleteDataRecursive(clone, currentWithoutIds, incoming)
   return clone
 }
 
 /**
- * UPDATE DATA
- * Senaryomuz su sekilde
- * Burda bu sefer her bir alan icin isequal islemi yapilacak eger
- * incoming alani uzerinde degisiklik varsa birinci katmanda updateData ya eklenecek
- * eger yoksa ikinci katman bakilacak recursive bir sekilde olacak
+ ** If there is no change between incoming and current data => null
+ ** If there is change between incoming and current data => updateData
  */
 function getUpdateData(incomingData, currentData) {
   let updateData = _.cloneDeep(incomingData)
@@ -174,8 +165,6 @@ function getUpdateData(incomingData, currentData) {
   return setUpdateData(updateData, currentDataClone, incomingData)
 }
 
-// onjeyi gez, array e dnek gelirsen gez,
-// objeye denk gelirsen
 function setUpdateData(updateData, currentData, incomingData) {
   function setUpdateDataRecursive(updateData, currentData, incomingData) {
     if (!_.isObject(incomingData) || !_.isObject(currentData)) return
@@ -256,7 +245,7 @@ function firstLevelComparator(objValue, othValue) {
  ** If currentData exists but incomingData => Only delete struct
  ** ---------------------------------------------------------------
  ** Not need to use create object, cause we are using upsert
- ** Upsert use update and create together, if update didnt work then create
+ ** Upsert use update and create together, if update didn't work then create
  ** Compare create and update data onto updateData
  *! If the table to be deleted has only ID and related tables, this will not work!!!!!!!
  *! Only works with arrays
@@ -292,7 +281,7 @@ export function getNestedPrismaStruct<T>({
  ** Is there any change between incoming and current data except ids => create updateData
  ** First clean all data except ids and objects which has id
  ** Is there any change between incoming and current data => create CreateData and DeleteData
- ** If deleteData has only id so dont delete it, if there are more properties then delete it.
+ ** If deleteData has only id so don't delete it, if there are more properties then delete it.
  *
  *! If the table to be deleted has only ID and related tables, this will not work!!!!!!!
  */
@@ -406,7 +395,7 @@ export function clearEmptyFields(data, options?: { keys: string[] }) {
 }
 
 /**
- ** Eksik olan alanlar eklenir, farkli bir kosulu mevcut
+ ** The missing areas are added
  */
 export function addMissingPropertiesToSecondObject(obj1, obj2) {
   function mergeRecursive(source, target) {
@@ -486,7 +475,8 @@ export function isThereAnyProperty(obj): boolean {
 }
 
 /**
- ** Birinci objedeki propertyleri ikinci objede varsa ekler obje array icin gecerlidir.
+ ** Merges properties from the first object (obj1) into the second object (obj2) under specific conditions.
+ ** This function is designed to add properties from obj1 to obj2 without altering existing properties in obj2.
  */
 export function addOnlyOwnPropertiesToSecondObject<T>(
   obj1: Readonly<T>,
@@ -522,8 +512,6 @@ export function addOnlyOwnPropertiesToSecondObject<T>(
  ** If there is cascadeList in options, it will delete the nested tables.
  */
 export function cascadeUpdate(deleteData, options) {
-  console.log('deleteData: ', deleteData)
-
   const { cascadeList } = options
   function cascadeUpdateRecursive(deleteData) {
     if (_.isArray(deleteData)) {
@@ -554,7 +542,6 @@ export function cascadeUpdate(deleteData, options) {
   return clone
 }
 
-// will check not working...
 export function deleteNestedTables(obj) {
   if (_.isArray(obj)) {
     obj.forEach((item) => {
