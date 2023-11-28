@@ -32,7 +32,7 @@ describe('generic prisma struct', () => {
         email: 'email@email.com',
         id: 4,
       }
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('check create, update first nested', () => {
@@ -71,7 +71,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('check create, update second nested', () => {
@@ -123,7 +123,7 @@ describe('generic prisma struct', () => {
           ],
         },
       }
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('check create, update third nested', () => {
@@ -206,7 +206,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('delete last table', () => {
@@ -261,7 +261,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('delete second table', () => {
@@ -317,7 +317,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('delete first table', () => {
@@ -374,7 +374,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('delete last table and create new', () => {
@@ -469,7 +469,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('delete middle table and create new', () => {
@@ -587,7 +587,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('update first nested ', () => {
@@ -629,7 +629,7 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
     })
 
     it('update second level', () => {
@@ -699,7 +699,139 @@ describe('generic prisma struct', () => {
         },
       }
 
-      expect(prismaStruct.data).toEqual(genericResult)
+      expect(prismaStruct).toEqual(genericResult)
+    })
+
+    it('only create', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'create',
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: copyData,
+      })
+
+      const genericResult = {
+        name: 'Ali',
+        id: 4,
+        email: 'email@email.com',
+        posts: {
+          create: [
+            {
+              id: 1,
+              title: 'create',
+            },
+          ],
+        },
+      }
+      expect(prismaStruct).toEqual(genericResult)
+    })
+
+    it('create nested', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'create',
+          comment: [
+            {
+              id: 1,
+              content: 'create',
+            },
+          ],
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: copyData,
+      })
+
+      const genericResult = {
+        name: 'Ali',
+        id: 4,
+        email: 'email@email.com',
+        posts: {
+          create: [
+            {
+              id: 1,
+              title: 'create',
+              comment: {
+                create: [
+                  {
+                    id: 1,
+                    content: 'create',
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }
+      expect(prismaStruct).toEqual(genericResult)
+    })
+
+    it('only delete', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'create',
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: {},
+        currentData: copyData,
+      })
+
+      const genericResult = {
+        posts: {
+          delete: [{ id: 1 }],
+        },
+      }
+      expect(prismaStruct).toEqual(genericResult)
+    })
+
+    it('only delete nested', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'create',
+          comment: [
+            {
+              id: 1,
+              content: 'create',
+            },
+          ],
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: {},
+        currentData: copyData,
+      })
+
+      const genericResult = {
+        posts: {
+          update: [
+            {
+              data: {
+                comment: {
+                  delete: [{ id: 1 }],
+                },
+              },
+              where: { id: 1 },
+            },
+          ],
+          delete: [{ id: 1 }],
+        },
+      }
+      expect(prismaStruct).toEqual(genericResult)
     })
   })
 })

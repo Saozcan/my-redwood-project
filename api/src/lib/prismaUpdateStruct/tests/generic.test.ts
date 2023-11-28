@@ -35,8 +35,5 @@ describe('generic prisma struct', () => {
         name: 'test',
       })
     })
-
- 
-
   })
 })

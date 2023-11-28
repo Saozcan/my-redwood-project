@@ -42,7 +42,10 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
   if (!generatePrisma) {
     return { ...input, id } as any
   }
-  return db.user.update(generatePrisma)
+  return db.user.update({
+    data: generatePrisma,
+    where: { id },
+  })
 }
 
 // export const createNestedUser: MutationResolvers['createNestedUser'] = ({

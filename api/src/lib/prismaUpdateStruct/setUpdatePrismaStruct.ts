@@ -254,11 +254,12 @@ export function setUpdatePrismaStructRecursion({
 }
 
 /**
- * It works only first levet of first level object...
+ ** It works only first levet of first level object...
  */
 export function setUpdatePrismaStruct({
   incomingData,
   updateData,
+  createData,
   deleteData,
 }) {
   const updatePrismaStruct = {}
@@ -267,7 +268,7 @@ export function setUpdatePrismaStruct({
       updatePrismaStruct[key] = setUpdatePrismaStructRecursion({
         incomingData: incomingData[key],
         updateData: updateData?.[key] ?? null,
-        createData: null,
+        createData: !updateData?.[key] ? createData?.[key] : null,
         deleteData: deleteData?.[key] ?? null,
       })
       if (_.isEmpty(updatePrismaStruct[key]) || !updatePrismaStruct[key]) {
@@ -277,6 +278,13 @@ export function setUpdatePrismaStruct({
       updateData?.[key] !== undefined &&
         (updatePrismaStruct[key] = updateData[key])
     }
+  }
+
+  /**
+   ** If only create
+   */
+  if (!updateData && !deleteData && createData) {
+    return { ...incomingData, ...updatePrismaStruct }
   }
 
   /**
@@ -320,7 +328,7 @@ export function setUpdatePrismaStruct({
       )
     }
   }
-  return { data: updatePrismaStruct, where: { id: incomingData.id } }
+  return { ...updatePrismaStruct }
 }
 
 export function disableSortForObjectFirstLevel(object) {
