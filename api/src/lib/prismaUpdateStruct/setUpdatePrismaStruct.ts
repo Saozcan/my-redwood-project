@@ -1,10 +1,6 @@
 import * as _ from 'lodash'
 
-import {
-  addMissingPropertiesToSecondObject,
-  deepCleanEmpty,
-  isThereAnyProperty,
-} from './getNestedStruct'
+import { deepCleanEmpty, isThereAnyProperty } from './getNestedStruct'
 
 function partOfUpdatePrismaStruct({ incomingData, updateData, deleteData }) {
   const prismaStructObject = {} as any
@@ -242,7 +238,6 @@ export function setUpdatePrismaStructRecursion({
   //     })
   //   }
   //   prismaStructObject.forEach((value, key) => {
-  //     console.log(key, value)
 
   //     if (_.isEmpty(value) || !value) {
   //       prismaStructObject.delete(key)
@@ -296,7 +291,7 @@ export function setUpdatePrismaStruct({
       if (!updatePrismaStruct[key]) {
         updatePrismaStruct[key] = {}
       }
-      updatePrismaStruct[key] = addMissingPropertiesToSecondObject(
+      updatePrismaStruct[key] = _.merge(
         setUpdatePrismaStructRecursion({
           incomingData: deleteData[key],
           updateData: null,
@@ -354,5 +349,5 @@ export function disableSortForObjectFirstLevel(object) {
   }
 
   const object2 = Object.fromEntries(mapObj)
-  return (object = addMissingPropertiesToSecondObject(object2, object))
+  return _.merge(object2, object)
 }

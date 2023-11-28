@@ -45,7 +45,7 @@ function customComparator(objValue, othValue, key, object, other, stack) {
   return _.isEqual(objValue, othValue)
 }
 
-function deepCleaningExceptIds<T>(data: Readonly<T>) {
+export function deepCleaningExceptIds<T>(data: Readonly<T>) {
   function deepCleaningExceptIdsRecursive(data) {
     if (_.isObject(data)) {
       for (const key in data) {
@@ -77,9 +77,9 @@ function getDeleteData(incoming, current) {
   return getCreateDeleteData(current, incoming)
 }
 /**
- * if you change the current and incoming it gives the delete data
+ ** Get create, delete data.
  */
-function getCreateDeleteData(incoming, current) {
+export function getCreateDeleteData(incoming, current) {
   let incomingWithoutIds = _.cloneDeep(incoming)
   incomingWithoutIds = deepCleaningExceptIds(incomingWithoutIds)
   let currentWithoutIds = _.cloneDeep(current)
@@ -153,7 +153,7 @@ function setCreateDeleteData(incomingWithoutIds, currentWithoutIds, incoming) {
  ** If there is no change between incoming and current data => null
  ** If there is change between incoming and current data => updateData
  */
-function getUpdateData(incomingData, currentData) {
+export function getUpdateData(incomingData, currentData) {
   let updateData = _.cloneDeep(incomingData)
   const currentDataClone = _.cloneDeep(currentData)
 
@@ -220,7 +220,10 @@ function setUpdateData(updateData, currentData, incomingData) {
   return clone
 }
 
-function firstLevelComparator(objValue, othValue) {
+/**
+ ** Only compare first level for objects
+ */
+export function firstLevelComparator(objValue, othValue) {
   if (_.isEqual(objValue, othValue)) {
     return true
   }
@@ -332,8 +335,9 @@ export function getCreateDeleteUpdateData<T>({
     deleteData = cascadeUpdate(deleteData, _options)
   }
 
-  updateData = addMissingPropertiesToSecondObject(createData, updateData)
+  updateData = _.merge(createData, updateData)
   updateData = addOnlyOwnPropertiesToSecondObject(incomingData, updateData)
+  updateData = _.isEmpty(updateData) ? null : updateData
   return {
     updateData,
     createData,
@@ -342,7 +346,7 @@ export function getCreateDeleteUpdateData<T>({
 }
 
 /**
- ** Clear empty fields except id, array and object contains id
+ ** If only id exists in the object, it will be deleted
  */
 export function clearEmptyFields(data, options?: { keys: string[] }) {
   function clearEmptyFieldsRecursive(data, options?: { keys: string[] }) {
@@ -394,72 +398,39 @@ export function clearEmptyFields(data, options?: { keys: string[] }) {
   return clone
 }
 
-/**
- ** The missing areas are added
- */
-export function addMissingPropertiesToSecondObject(obj1, obj2) {
-  function mergeRecursive(source, target) {
-    if (_.isArray(source)) {
-      console.log('source: ', source)
-
-      source.forEach((value, index) => {
-        if (_.isObject(value)) {
-          mergeRecursive(value, target[index])
-        }
-      })
-    }
-
-    if (_.isObject(source)) {
-      _.forEach(source, (value, key) => {
-        if (!_.has(target, key)) {
-          target[key] = _.cloneDeep(value)
-        } else if (_.isObject(value) && _.isObject(target[key])) {
-          mergeRecursive(value, target[key])
-        }
-      })
-    }
-  }
-  const obj2Clone = _.cloneDeep(obj2)
-  mergeRecursive(obj1, obj2Clone)
-  return obj2Clone
-}
-
 export function deepCleanEmpty<T>(objOrArray: Readonly<T>) {
-  // Function to determine if an object or array is empty
-  function isEmpty(value) {
-    return (
-      (Array.isArray(value) && value.length === 0) ||
-      (Object.prototype.toString.call(value) === '[object Object]' &&
-        Object.keys(value).length === 0)
-    )
-  }
-
-  // If it's an array, filter out empty objects/arrays and apply recursively
-  if (Array.isArray(objOrArray)) {
-    objOrArray.forEach((item, index) => {
-      if (_.isEmpty(item)) {
-        objOrArray.splice(index, 1) // Remove empty objects/arrays
-      }
-    })
-    return objOrArray
-      .map((item) => (item = deepCleanEmpty(item)))
-      .filter((item) => !isEmpty(item))
-  }
-  // If it's an object, apply recursively to its properties
-  else if (typeof objOrArray === 'object' && objOrArray !== null) {
-    Object.keys(objOrArray).forEach((key) => {
-      const value = objOrArray[key]
-      if (isEmpty(value)) {
-        delete objOrArray[key] // Remove empty objects/arrays
-      } else {
-        objOrArray[key] = deepCleanEmpty(value) // Apply recursively
-      }
-    })
+  function deepCleanEmptyRecursive(objOrArray) {
+    function isEmpty(value) {
+      return (
+        (Array.isArray(value) && value.length === 0) ||
+        (Object.prototype.toString.call(value) === '[object Object]' &&
+          Object.keys(value).length === 0)
+      )
+    }
+    if (Array.isArray(objOrArray)) {
+      objOrArray.forEach((item, index) => {
+        if (_.isEmpty(item)) {
+          objOrArray.splice(index, 1) // Remove empty objects/arrays
+        }
+      })
+      return objOrArray
+        .map((item) => (item = deepCleanEmpty(item)))
+        .filter((item) => !isEmpty(item))
+    } else if (typeof objOrArray === 'object' && objOrArray !== null) {
+      Object.keys(objOrArray).forEach((key) => {
+        const value = objOrArray[key]
+        if (isEmpty(value)) {
+          delete objOrArray[key] // Remove empty objects/arrays
+        } else {
+          objOrArray[key] = deepCleanEmpty(value)
+        }
+      })
+      return objOrArray
+    }
     return objOrArray
   }
-
-  // Return the value if it's neither an object nor an array
-  return objOrArray
+  const clone = _.cloneDeep(objOrArray)
+  return deepCleanEmptyRecursive(clone)
 }
 
 export function isThereAnyProperty(obj): boolean {
@@ -513,6 +484,7 @@ export function addOnlyOwnPropertiesToSecondObject<T>(
  */
 export function cascadeUpdate(deleteData, options) {
   const { cascadeList } = options
+
   function cascadeUpdateRecursive(deleteData) {
     if (_.isArray(deleteData)) {
       deleteData.forEach((item) => {
