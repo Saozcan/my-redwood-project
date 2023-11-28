@@ -37,6 +37,8 @@ export const updateUser: MutationResolvers['updateUser'] = async ({
     incomingData: { ...input, id },
     currentData: { ...current, id },
   })
+  console.dir(input, { depth: 15 })
+  console.dir(current, { depth: 15 })
   console.dir(generatePrisma, { depth: 15 })
 
   if (!generatePrisma) {
