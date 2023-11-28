@@ -833,5 +833,149 @@ describe('generic prisma struct', () => {
       }
       expect(prismaStruct).toEqual(genericResult)
     })
+
+    it('only delete nested with cascadeList middle table', () => {
+      const data = {
+        name: 'Ali',
+        email: 'email@email.com',
+        id: 4,
+      }
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'create',
+          comment: [
+            {
+              id: 2,
+              content: 'create',
+              commentLike: [
+                {
+                  id: 3,
+                  commentLike: 123,
+                },
+              ],
+            },
+          ],
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        currentData: copyData,
+        _options: { cascadeList: ['comment'] },
+      })
+
+      const genericResult = {
+        posts: {
+          update: [
+            {
+              data: {
+                comment: {
+                  delete: [{ id: 2 }],
+                },
+              },
+              where: { id: 1 },
+            },
+          ],
+          delete: [{ id: 1 }],
+        },
+      }
+      expect(prismaStruct).toEqual(genericResult)
+    })
+
+    it('update, create, delete at the same time', () => {
+      const copyData = _.cloneDeep(data) as any
+      copyData.posts = [
+        {
+          id: 1,
+          title: 'update',
+          comment: [
+            {
+              id: 1,
+              content: 'create',
+              commentLike: [
+                {
+                  id: 1,
+                  like: true,
+                },
+              ],
+            },
+          ],
+        },
+      ]
+      const incomingWithoutLastTable = _.cloneDeep(copyData)
+      delete incomingWithoutLastTable.posts[0].comment[0].commentLike
+      incomingWithoutLastTable.posts[0].comment[0].commentLike = [
+        {
+          id: 2,
+          like: true,
+        },
+      ]
+
+      const prismaStruct = getNestedPrismaStruct({
+        incomingData: incomingWithoutLastTable,
+        currentData: copyData,
+      })
+
+      const genericResult = {
+        name: 'Ali',
+        id: 4,
+        email: 'email@email.com',
+        posts: {
+          upsert: [
+            {
+              update: {
+                id: 1,
+                title: 'update',
+                comment: {
+                  upsert: [
+                    {
+                      update: {
+                        id: 1,
+                        content: 'create',
+                        commentLike: {
+                          upsert: [
+                            {
+                              update: { id: 2, like: true },
+                              create: { id: 2, like: true },
+                              where: { id: 2 },
+                            },
+                          ],
+                          delete: [{ id: 1 }],
+                        },
+                      },
+                      create: {
+                        id: 1,
+                        content: 'create',
+                        commentLike: {
+                          create: [{ id: 2, like: true }],
+                        },
+                      },
+                      where: { id: 1 },
+                    },
+                  ],
+                },
+              },
+              create: {
+                id: 1,
+                title: 'update',
+                comment: {
+                  create: [
+                    {
+                      id: 1,
+                      content: 'create',
+                      commentLike: { create: [{ id: 2, like: true }] },
+                    },
+                  ],
+                },
+              },
+              where: { id: 1 },
+            },
+          ],
+        },
+      }
+
+      expect(prismaStruct).toEqual(genericResult)
+    })
   })
 })

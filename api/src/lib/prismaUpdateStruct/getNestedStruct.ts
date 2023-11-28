@@ -259,6 +259,7 @@ function firstLevelComparator(objValue, othValue) {
  ** Upsert use update and create together, if update didnt work then create
  ** Compare create and update data onto updateData
  *! If the table to be deleted has only ID and related tables, this will not work!!!!!!!
+ *! Only works with arrays
  */
 export function getNestedPrismaStruct<T>({
   incomingData,
@@ -308,7 +309,9 @@ export function getCreateDeleteUpdateData<T>({
     return {
       updateData: null,
       createData: null,
-      deleteData: currentData,
+      deleteData: _.has(_options, 'cascadeList')
+        ? cascadeUpdate(currentData, _options)
+        : currentData,
     }
   }
 
@@ -334,6 +337,10 @@ export function getCreateDeleteUpdateData<T>({
     incomingData['id'] === deleteData['id']
   ) {
     deleteData = null
+  }
+
+  if (deleteData && _.has(_options, 'cascadeList')) {
+    deleteData = cascadeUpdate(deleteData, _options)
   }
 
   updateData = addMissingPropertiesToSecondObject(createData, updateData)
@@ -398,6 +405,9 @@ export function clearEmptyFields(data, options?: { keys: string[] }) {
   return clone
 }
 
+/**
+ ** Eksik olan alanlar eklenir, farkli bir kosulu mevcut
+ */
 export function addMissingPropertiesToSecondObject(obj1, obj2) {
   function mergeRecursive(source, target) {
     if (_.isArray(source)) {
@@ -506,4 +516,60 @@ export function addOnlyOwnPropertiesToSecondObject<T>(
   const clone = _.cloneDeep(obj2)
   mergeRecursive(obj1, clone)
   return clone
+}
+
+/**
+ ** If there is cascadeList in options, it will delete the nested tables.
+ */
+export function cascadeUpdate(deleteData, options) {
+  console.log('deleteData: ', deleteData)
+
+  const { cascadeList } = options
+  function cascadeUpdateRecursive(deleteData) {
+    if (_.isArray(deleteData)) {
+      deleteData.forEach((item) => {
+        cascadeUpdateRecursive(item)
+      })
+    } else if (_.isObject(deleteData)) {
+      for (const key in deleteData) {
+        if (_.isArray(deleteData[key])) {
+          if (cascadeList.includes(key)) {
+            deleteNestedTables(deleteData[key])
+          } else {
+            cascadeUpdateRecursive(deleteData[key])
+          }
+        } else if (_.isObject(deleteData[key])) {
+          if (cascadeList.includes(key)) {
+            deleteNestedTables(deleteData[key])
+          } else {
+            cascadeUpdateRecursive(deleteData[key])
+          }
+        }
+      }
+    }
+  }
+
+  const clone = _.cloneDeep(deleteData)
+  cascadeUpdateRecursive(clone)
+  return clone
+}
+
+// will check not working...
+export function deleteNestedTables(obj) {
+  if (_.isArray(obj)) {
+    obj.forEach((item) => {
+      deleteNestedTables(item)
+    })
+    return
+  }
+  if (_.isObject(obj)) {
+    for (const key in obj) {
+      if (
+        (_.isObject(obj[key]) && _.has(obj[key], 'id')) ||
+        _.isArray(obj[key])
+      ) {
+        delete obj[key]
+      }
+    }
+  }
 }
