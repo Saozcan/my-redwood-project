@@ -23,3 +23,14 @@ export const hasRole = ({ roles }) => {
 export const requireAuth = ({ roles }) => {
   return isAuthenticated()
 }
+
+export const getCurrentUser = () => {
+  return null
+}
+
+export const authDecoder = (token: string, type: string) => {
+  console.log('authDecode token: ', token)
+  console.log('authDecode type: ', type)
+
+  return null
+}
